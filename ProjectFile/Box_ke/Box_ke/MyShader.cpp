@@ -1,4 +1,4 @@
-#include "MyShader.h"
+﻿#include "MyShader.h"
 
 CShaderDX11DrawTriangleShader::CShaderDX11DrawTriangleShader(ID3D11Device* device)
 {

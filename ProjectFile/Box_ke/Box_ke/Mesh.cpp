@@ -1,6 +1,6 @@
-#include "Mesh.h"
+ï»¿#include "Mesh.h"
 
-// BasedOnViewport = true, Æò¸éÀÇ ÁÂÃøÀ§¸¦ Áß½ÉÀ¸·Î Æò¸éÀ» Á¤ÀÇ
+// BasedOnViewport = true, í‰ë©´ì˜ ì¢Œì¸¡ìœ„ë¥¼ ì¤‘ì‹¬ìœ¼ë¡œ í‰ë©´ì„ ì •ì˜
 CMesh::CMesh(float width, float height, bool BasedOnViewport)
 {
 	if (BasedOnViewport) {
@@ -126,7 +126,72 @@ CMesh::CMesh(float width, float height, float depth, XMFLOAT3 center, bool haveI
 
 CMesh::CMesh(float radius, UINT sampleCount, XMFLOAT3 center)
 {
+	if (sampleCount < 8) sampleCount = 8;
 
+	m_Vertices.emplace_back(center.x, center.y + radius, center.z);
+
+	float vertical = 180.f / (sampleCount + 1);
+	float horizon = 360.f / sampleCount;
+
+	for (UINT i = 0; i < sampleCount; ++i) {
+		float ver = 90.0f - (vertical * static_cast<float>(i + 1));
+		float radver = XMConvertToRadians(ver);
+		float horRadius = radius * cosf(radver);
+		for (UINT j = 0; j < sampleCount; ++j) {
+			float hor = horizon * j;
+			float radhor = XMConvertToRadians(hor);
+			m_Vertices.emplace_back(center.x + (horRadius * cosf(radhor)), center.y + (radius * sinf(radver)), center.z + (horRadius * sinf(radhor)));
+		}
+	}
+	m_Vertices.emplace_back(center.x, center.y - radius, center.z);
+
+	std::vector<UINT> index;
+	for (UINT i = 0; i < sampleCount; ++i) {
+		index.emplace_back(0);
+		index.emplace_back(i + 2);
+		index.emplace_back(i + 1);
+	}
+	index[index.size() - 2] = 1;
+
+	for (UINT i = 0; i < sampleCount - 1; ++i) {
+		UINT line = i * sampleCount;
+		UINT nextline = (i + 1) * sampleCount;
+		for (UINT j = 1; j <= sampleCount; ++j) {
+			if (j != sampleCount) {
+				index.emplace_back(j + line);
+				index.emplace_back(j + 1 + line);
+				index.emplace_back(j + nextline);
+
+				index.emplace_back(j + nextline);
+				index.emplace_back(j + 1 + line);
+				index.emplace_back(j + 1 + nextline);
+			}
+			else {
+				index.emplace_back(j + line);
+				index.emplace_back(1 + line);
+				index.emplace_back(j + nextline);
+
+				index.emplace_back(j + nextline);
+				index.emplace_back(1 + line);
+				index.emplace_back(1 + nextline);
+			}
+		}
+	}
+
+	UINT lastIndex = 1 + sampleCount * sampleCount;
+	for (UINT i = 0; i < sampleCount; ++i) {
+		index.emplace_back(i + lastIndex - sampleCount);
+		index.emplace_back(i + lastIndex - sampleCount + 1);
+		index.emplace_back(lastIndex);
+	}
+	index[index.size() - 2] = lastIndex - sampleCount;
+
+	m_Indices.push_back(index);
+
+	m_HaveBoundingInfo = 0x0f;
+	m_MeshBoundingSphere = BoundingSphere(center, radius);
+
+	m_VertexStride = sizeof(XMFLOAT3);
 }
 
 BoundingOrientedBox CMesh::GetOBB()
@@ -141,7 +206,7 @@ BoundingSphere CMesh::GetBoundingSphere()
 
 // DX11===========================================================================
 
-// device´Â nullÀÌ µÉ ¼ö ¾ø´Ù
+// deviceëŠ” nullì´ ë  ìˆ˜ ì—†ë‹¤
 CMeshDX11::CMeshDX11(void* device, float width, float height, void* command, bool BasedOnViewport)
 	: CMesh(width, height, BasedOnViewport)
 {
@@ -156,11 +221,12 @@ CMeshDX11::CMeshDX11(void* device, float width, float height, float depth, void*
 	m_PT = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 }
 
-// »ç¿ë ±İÁö
-CMeshDX11::CMeshDX11(float radius, UINT sampleCount, XMFLOAT3 center)
+// ì‚¬ìš© ê¸ˆì§€
+CMeshDX11::CMeshDX11(void* device, float radius, UINT sampleCount, XMFLOAT3 center, void* command)
 	: CMesh(radius, sampleCount, center)
 {
-
+	InitVertexAndIndexBuffers(device, command);
+	m_PT = D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 }
 
 void CMeshDX11::InitVertexAndIndexBuffers(void* device, void* command)
@@ -192,11 +258,27 @@ void CMeshDX11::Render(void* command)
 	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
 	context->IASetPrimitiveTopology(m_PT);
 	context->IASetVertexBuffers(0, 1, m_VertexBuffer.GetAddressOf(), &m_VertexStride, &m_VertexOffset);
-	if (m_IndexBuffers.size() != 0) {
+	if (m_IndexBuffers.size() > 0) {
 		for (int i = 0; i < m_IndexBuffers.size(); ++i) {
 			context->IASetIndexBuffer(m_IndexBuffers[i].Get(), DXGI_FORMAT_R32_UINT, 0);
 			context->DrawIndexed(m_Indices[i].size(), 0, 0);
 		}
+	}
+	else {
+		context->DrawInstanced(m_Vertices.size() * 3, 1, 0, 0);
+	}
+}
+
+void CMeshDX11::Render(void* command, UINT numIndex)
+{
+	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
+	context->IASetPrimitiveTopology(m_PT);
+	context->IASetVertexBuffers(0, 1, m_VertexBuffer.GetAddressOf(), &m_VertexStride, &m_VertexOffset);
+	size_t indexSize = m_IndexBuffers.size();
+	if (indexSize > 0) {
+		if (numIndex >= indexSize) numIndex = indexSize - 1;
+		context->IASetIndexBuffer(m_IndexBuffers[numIndex].Get(), DXGI_FORMAT_R32_UINT, 0);
+		context->DrawIndexed(m_Indices[numIndex].size(), 0, 0);
 	}
 	else {
 		context->DrawInstanced(m_Vertices.size() * 3, 1, 0, 0);

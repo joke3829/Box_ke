@@ -1,4 +1,4 @@
-#include "Shaders.h"
+ï»¿#include "Shaders.h"
 
 // Base============================================================
 
@@ -32,13 +32,13 @@ void CShaderDX11::SetShader(void* command)
 	if (m_DepthStencilState) context->OMSetDepthStencilState(m_DepthStencilState.Get(), m_StencilRef);
 	else context->OMSetDepthStencilState(nullptr, m_StencilRef);
 
-	if (m_BlendState) context->OMSetBlendState(m_BlendState.Get(), nullptr, 0xffffffff); // ÇÊ¿ä ½Ã ¼öÁ¤
+	if (m_BlendState) context->OMSetBlendState(m_BlendState.Get(), nullptr, 0xffffffff); // í•„ìš” ì‹œ ìˆ˜ì •
 	else context->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 
 	if (m_RasterizerState) context->RSSetState(m_RasterizerState.Get());
 	else context->RSSetState(nullptr);
 
-	context->VSSetShader(m_VS.Get(), nullptr, 0);		// ÇÊ¼ö(¾Æ´Ò¼öµµ ÀÖÀ½)
+	context->VSSetShader(m_VS.Get(), nullptr, 0);		// í•„ìˆ˜(ì•„ë‹ìˆ˜ë„ ìžˆìŒ)
 
 	if (m_HS) {
 		context->HSSetShader(m_HS.Get(), nullptr, 0);

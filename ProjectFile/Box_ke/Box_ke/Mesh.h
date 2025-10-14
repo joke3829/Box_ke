@@ -1,6 +1,6 @@
-// ========================================================
+ï»¿// ========================================================
 // Mesh.h
-// Á¤Á¡ Á¤º¸³ª ÀÎµ¦½º Á¤º¸¸¦ ÀúÀåÇÏ´Â Çì´õ
+// ì •ì  ì •ë³´ë‚˜ ì¸ë±ìŠ¤ ì •ë³´ë¥¼ ì €ì¥í•˜ëŠ” í—¤ë”
 // ========================================================
 
 #pragma once
@@ -16,6 +16,7 @@ public:
 	BoundingSphere GetBoundingSphere();
 
 	virtual void Render(void* command) {}
+	virtual void Render(void* command, UINT numIndex) {}
 protected:
 	std::vector<XMFLOAT3>			m_Vertices{};
 	std::vector<std::vector<UINT>>	m_Indices{};
@@ -23,7 +24,7 @@ protected:
 	UINT							m_VertexStride{};
 	UINT							m_VertexOffset{};
 
-	// »óÀ§ 4ºñÆ® = OBB¸¦ °¡Áü, ÇÏÀ§ 4ºñÆ® = BoundingSphere¸¦ °¡Áü
+	// ìƒìœ„ 4ë¹„íŠ¸ = OBBë¥¼ ê°€ì§, í•˜ìœ„ 4ë¹„íŠ¸ = BoundingSphereë¥¼ ê°€ì§
 	BoundingOrientedBox				m_MeshOBB{};
 	BoundingSphere					m_MeshBoundingSphere{};
 	BYTE							m_HaveBoundingInfo{};	
@@ -35,9 +36,10 @@ class CMeshDX11 : public CMesh {
 public:
 	CMeshDX11(void* device, float width, float height, void* command = nullptr, bool BasedOnViewport = false);
 	CMeshDX11(void* device, float width, float height, float depth, void* command = nullptr, XMFLOAT3 center = {}, bool haveIndex = false);
-	CMeshDX11(float radius, UINT sampleCount = 8, XMFLOAT3 center = {});
+	CMeshDX11(void* device, float radius, UINT sampleCount = 8, XMFLOAT3 center = {}, void* command = nullptr);
 
 	virtual void Render(void* command);
+	virtual void Render(void* command, UINT numIndex);
 protected:
 	void InitVertexAndIndexBuffers(void* device, void* command = nullptr);
 

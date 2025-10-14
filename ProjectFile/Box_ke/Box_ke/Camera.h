@@ -1,9 +1,9 @@
-
+ï»¿
 #pragma once
 #include "stdafx.h"
 class CGameObject;
 
-// Camera Cbuffer	¾ğÁ¦µçÁö º¯°æ °¡´É 
+// Camera Cbuffer	ì–¸ì œë“ ì§€ ë³€ê²½ ê°€ëŠ¥ 
 struct CameraCBuffer {
 	XMFLOAT4X4 ViewProj;
 	XMFLOAT4X4 InvViewProj;
@@ -11,13 +11,14 @@ struct CameraCBuffer {
 
 class CCamera {
 public:
-	CCamera(float fov, float aspect, float nearZ, float farZ);				// ¿ø±ÙÅõ¿µ
-	CCamera(UINT viewWidth, UINT viewHeight, float nearZ, float farZ);		// Á÷±³Åõ¿µ
+	CCamera(float fov, float aspect, float nearZ, float farZ);				// ì›ê·¼íˆ¬ì˜
+	CCamera(UINT viewWidth, UINT viewHeight, float nearZ, float farZ);		// ì§êµíˆ¬ì˜
 
 	virtual void UpdateCameraBuffer(void* command) {}
-	virtual void SetShaderVariable(void* command, ShaderType type = ST_NONE) {}	// DX11ÀÇ °æ¿ì ¹İµå½Ã 2¹øÂ° ÀÎÀÚ¸¦ Ã¤¿ö¾ßÇÑ´Ù.
+	virtual void SetShaderVariable(void* command, ShaderType type = ST_NONE) {}	// DX11ì˜ ê²½ìš° ë°˜ë“œì‹œ 2ë²ˆì§¸ ì¸ìë¥¼ ì±„ì›Œì•¼í•œë‹¤.
 
 	void SetStartSlot(UINT slot);
+	void SetRootParameterIndex(UINT index);
 
 	void ModifyProjection(float fov, float aspect, float nearZ, float farZ);
 	void ModifyProjection(UINT viewWidth, UINT viewHeight, float nearZ, float farZ);
@@ -38,7 +39,10 @@ public:
 	void Move(float speed, float elapsedTime, XMFLOAT3 arrow = {});
 	void Rotate(float deltaX, float deltaY);
 protected:
-	UINT			m_StartSlot{};
+	union {
+		UINT			m_StartSlot{};
+		UINT			m_RootParameterIndex;
+	};
 
 	XMFLOAT3		m_EYE{};
 	XMFLOAT3		m_LookVec{ 0.f, 0.f, 1.f };
@@ -47,7 +51,7 @@ protected:
 
 	XMMATRIX		m_ProjectionMatrix{};
 
-	// 3ÀÎÄª ¿É¼Ç
+	// 3ì¸ì¹­ ì˜µì…˜
 	bool			m_bThirdPerson{};
 	XMFLOAT3		m_OffsetVec{ 0.f, 0.f, -1.f };
 	CGameObject*	m_Target{};

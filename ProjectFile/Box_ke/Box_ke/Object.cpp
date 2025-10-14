@@ -1,4 +1,4 @@
-#include "Object.h"
+ï»¿#include "Object.h"
 
 void CGameObject::UpdateWorldMat()
 {
@@ -43,6 +43,11 @@ void CGameObject::SetStartSlot(UINT slot)
 	m_StartSlot = slot;
 }
 
+void CGameObject::SetRootParameterIndex(UINT index)
+{
+	m_RootParameterIndex = index;
+}
+
 XMFLOAT3 CGameObject::GetRightVec() const
 {
 	return m_RightVec;
@@ -70,12 +75,12 @@ XMFLOAT3 CGameObject::GetScaleFactor() const
 
 XMFLOAT4X4 CGameObject::GetWorldMatrix()
 {
-	UpdateWorldMat();		// ¿ùµå Çà·ÄÀº ÃÖ½ÅÈ­ ÇØ¼­ ³Ñ°ÜÁØ´Ù.
+	UpdateWorldMat();		// ì›”ë“œ í–‰ë ¬ì€ ìµœì‹ í™” í•´ì„œ ë„˜ê²¨ì¤€ë‹¤.
 	return m_WorldMat;
 }
 
-// X, Y, Z Àı´ë ÃàÀ» ÀÌ¿ëÇÑ È¸Àü
-// È¸ÀüÀº x, y, z ¼øÀ¸·Î ÁøÇàÇÑ´Ù.
+// X, Y, Z ì ˆëŒ€ ì¶•ì„ ì´ìš©í•œ íšŒì „
+// íšŒì „ì€ x, y, z ìˆœìœ¼ë¡œ ì§„í–‰í•œë‹¤.
 void CGameObject::RotateAbsAxis(float AxisX, float AxisY, float AxisZ)
 {
 	if (AxisX != 0.f) {
@@ -114,8 +119,8 @@ void CGameObject::RotateAbsAxis(XMFLOAT3 rot)
 	}
 }
 
-// °´Ã¼ÀÇ °¢ ÃàÀ» ÀÌ¿ëÇÑ È¸Àü
-// È¸ÀüÀº right, up, look ¼øÀ¸·Î ÁøÇàÇÑ´Ù.
+// ê°ì²´ì˜ ê° ì¶•ì„ ì´ìš©í•œ íšŒì „
+// íšŒì „ì€ right, up, look ìˆœìœ¼ë¡œ ì§„í–‰í•œë‹¤.
 void CGameObject::RotateLocalAxis(float right, float up, float look)
 {
 	if (right != 0.f) {
@@ -199,9 +204,10 @@ void CHierarchyGameObjectDX11::UpdateWorldMat()
 {
 	CGameObjectDX11::UpdateWorldMat();
 	XMStoreFloat4x4(&m_HierarchyWorldMat, XMLoadFloat4x4(&m_WorldMat) * XMLoadFloat4x4(&m_ParentWorldMat));
-	for (std::shared_ptr<CHierarchyGameObjectDX11>& child : m_Childs) {
-		child->SetParentMat(m_HierarchyWorldMat);
-		child->UpdateWorldMat();
+	for (std::shared_ptr<CGameObject>& child : m_Childs) {
+		auto* p = dynamic_cast<CHierarchyGameObjectDX11*>(child.get());
+		p->SetParentMat(m_HierarchyWorldMat);
+		p->UpdateWorldMat();
 	}
 }
 
@@ -216,7 +222,7 @@ XMFLOAT4X4 CHierarchyGameObjectDX11::GetHierarchyWorldMat()
 	return m_HierarchyWorldMat;
 }
 
-std::vector<std::shared_ptr<CHierarchyGameObjectDX11>>& CHierarchyGameObjectDX11::GetChilds()
+std::vector<std::shared_ptr<CGameObject>>& CHierarchyGameObjectDX11::GetChilds()
 {
 	return m_Childs;
 }
@@ -234,8 +240,9 @@ void CHierarchyGameObjectDX11::Render(void* command)
 		context->VSSetConstantBuffers(m_StartSlot, 1, m_WorldBuffer.GetAddressOf());
 		m_Mesh->Render(command);
 	}
-	for (std::shared_ptr<CHierarchyGameObjectDX11>& child : m_Childs) {
-		child->SetParentMat(m_HierarchyWorldMat);
-		child->Render(command);
+	for (std::shared_ptr<CGameObject>& child : m_Childs) {
+		auto* p = dynamic_cast<CHierarchyGameObjectDX11*>(child.get());
+		p->SetParentMat(m_HierarchyWorldMat);
+		p->Render(command);
 	}
 }

@@ -52,6 +52,9 @@
     <Filter Include="소스 파일\Timer">
       <UniqueIdentifier>{d7b8344f-ad14-490a-a81b-3886d8f4456e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Resource\Material">
+      <UniqueIdentifier>{af392998-b75a-42e8-bf20-3066c5ca42ff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -96,6 +99,9 @@
     <ClInclude Include="Timer.h">
       <Filter>소스 파일\Timer</Filter>
     </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>소스 파일\Resource\Material</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Box_ke.cpp">
@@ -133,6 +139,9 @@
     </ClCompile>
     <ClCompile Include="Timer.cpp">
       <Filter>소스 파일\Timer</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>소스 파일\Resource\Material</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

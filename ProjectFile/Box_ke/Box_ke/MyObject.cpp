@@ -1,4 +1,4 @@
-#include "MyObject.h"
+﻿#include "MyObject.h"
 
 CCircleObjectDX11::CCircleObjectDX11(void* command)
 	: CHierarchyGameObjectDX11(command)

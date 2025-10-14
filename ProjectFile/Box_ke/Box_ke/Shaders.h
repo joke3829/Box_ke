@@ -1,6 +1,6 @@
-// ==================================================
+ï»¿// ==================================================
 // Shaders.h
-// Base°¡ µÉ ¼ÎÀÌ´õ¸¦ Á¤¸®ÇØµĞ .h
+// Baseê°€ ë  ì…°ì´ë”ë¥¼ ì •ë¦¬í•´ë‘” .h
 // ==================================================
 #pragma once
 #include "stdafx.h"
@@ -10,7 +10,7 @@ public:
 	// command: DX11 -> DeviceContext, DX12 -> CommandList
 	virtual void SetShader(void* command) {}
 	
-	// Shader ReCompile in Runtime, µÉÁö ÀÇ¹®
+	// Shader ReCompile in Runtime, ë ì§€ ì˜ë¬¸
 	virtual void ShaderReCompile(void* device) {};
 protected:
 	ComPtr<ID3DBlob> CompileHLSL(LPCWSTR pFileName, LPCSTR pEntryPoint, LPCSTR pTarget);
@@ -21,7 +21,7 @@ protected:
 class CShaderDX11 : public CShader {
 	void SetShader(void* command);
 	virtual void ShaderReCompile(void* device) {};
-	// Render°¡ ÇÊ¿äÇÒÁö °í¹Î
+	// Renderê°€ í•„ìš”í• ì§€ ê³ ë¯¼
 protected:
 	// Guideline
 	virtual void CreateBlendState(ID3D11Device* device) {};
@@ -32,9 +32,9 @@ protected:
 	virtual void CreateHS(ID3D11Device* device) {};
 	virtual void CreateDS(ID3D11Device* device) {};
 	virtual void CreateGS(ID3D11Device* device) {};
-	virtual void CreatePS(ID3D11Device* device) {};	// SamplerState´Â ¿©±â¼­ »ı¼ºÇØÁØ´Ù
+	virtual void CreatePS(ID3D11Device* device) {};	// SamplerStateëŠ” ì—¬ê¸°ì„œ ìƒì„±í•´ì¤€ë‹¤
 
-	// ÀÌ µÎ ¸â¹ö´Â »ó¼ÓÇØ ¸¸µå´Â ¼ÎÀÌ´õÀÇ »ı¼ºÀÚ¿¡¼­ ÃÊ±âÈ­ÇØÁØ´Ù.
+	// ì´ ë‘ ë©¤ë²„ëŠ” ìƒì†í•´ ë§Œë“œëŠ” ì…°ì´ë”ì˜ ìƒì„±ìì—ì„œ ì´ˆê¸°í™”í•´ì¤€ë‹¤.
 	UINT									m_StencilRef{ 1 };
 	UINT									m_SamplerSlot{};
 
@@ -42,15 +42,15 @@ protected:
 	ComPtr<ID3D11DepthStencilState>			m_DepthStencilState{};	
 	ComPtr<ID3D11BlendState>				m_BlendState{};
 	ComPtr<ID3D11RasterizerState>			m_RasterizerState{};
-	std::vector<ComPtr<ID3D11SamplerState>>	m_SamplerStates{};		// PS°¡ ¿ä±¸ÇÏ¸é Á¤ÀÇ
-	std::vector<ID3D11SamplerState*>		m_Samplers{};			// º¹»ç¿¬»êÀ» ÇÏÁö ¾Ê±âÀ§ÇØ ¸Ş¸ğ¸® Èñ»ı
+	std::vector<ComPtr<ID3D11SamplerState>>	m_SamplerStates{};		// PSê°€ ìš”êµ¬í•˜ë©´ ì •ì˜
+	std::vector<ID3D11SamplerState*>		m_Samplers{};			// ë³µì‚¬ì—°ì‚°ì„ í•˜ì§€ ì•Šê¸°ìœ„í•´ ë©”ëª¨ë¦¬ í¬ìƒ
 
 	ComPtr<ID3D11VertexShader>				m_VS{};
 	ComPtr<ID3D11HullShader>				m_HS{};
 	ComPtr<ID3D11DomainShader>				m_DS{};
 	ComPtr<ID3D11GeometryShader>			m_GS{};
 	ComPtr<ID3D11PixelShader>				m_PS{};
-	// Compute´Â µû·Î »ç¿ëÇÏ°Ú´Ù.
+	// ComputeëŠ” ë”°ë¡œ ì‚¬ìš©í•˜ê² ë‹¤.
 };
 
 // DX12 =======================================================================================

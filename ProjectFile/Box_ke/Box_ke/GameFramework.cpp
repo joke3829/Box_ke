@@ -1,6 +1,6 @@
-// ===========================================================
+ï»¿// ===========================================================
 // GameFramework.cpp
-// Framework ÇÔ¼öµéÀÇ Á¤ÀÇ¸¦ Á¤¸®ÇØµĞ cpp ÆÄÀÏ
+// Framework í•¨ìˆ˜ë“¤ì˜ ì •ì˜ë¥¼ ì •ë¦¬í•´ë‘” cpp íŒŒì¼
 // ===========================================================
 #include "GameFramework.h"
 
@@ -44,7 +44,7 @@ bool CGameFrameworkDX11::Initialize(HWND hWnd, UINT clientWidth, UINT clientHeig
 	if (!InitSwapChain()) return false;
 	if (!InitRTVDSV()) return false;
 
-	m_Scene = std::make_shared<CTestSceneDX11>();
+	m_Scene = std::make_shared<CShaderTestSceneDX11>();
 	m_Scene->Setup(m_Device.Get(), m_DeviceContext.Get());
 
 	m_Timer = std::make_shared<CTimer>();

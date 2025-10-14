@@ -1,9 +1,10 @@
-// ====================================================
+ï»¿// ====================================================
 // Object.h
-// Object Á¤º¸¸¦ Á¤¸®ÇÑ Çì´õ
+// Object ì •ë³´ë¥¼ ì •ë¦¬í•œ í—¤ë”
 // 
-// CGameObject: ´ÜÀÏ °´Ã¼ ±¸Á¶
-// CHierarchyGameObject: ÀÚ½ÄÀ» °¡Áö´Â °èÃş ±¸Á¶
+// CGameObject: ë‹¨ì¼ ê°ì²´ êµ¬ì¡°
+// CHierarchyGameObject: ìì‹ì„ ê°€ì§€ëŠ” ê³„ì¸µ êµ¬ì¡°
+// 25.10.15 - ë‹¤í˜•ì„±ì„ ê³ ë ¤í•´ CHierarchyGameObjectì˜ ìì‹ ë¦¬ìŠ¤íŠ¸ë¥¼ CGameObjectë¡œ ë³€ê²½í•¨
 // ====================================================
 #pragma once
 #include "stdafx.h"
@@ -24,6 +25,7 @@ public:
 	void SetPosition(XMFLOAT3 pos);
 
 	void SetStartSlot(UINT slot);
+	void SetRootParameterIndex(UINT index);
 
 	XMFLOAT3 GetRightVec() const;
 	XMFLOAT3 GetUpVec() const;
@@ -32,7 +34,7 @@ public:
 	XMFLOAT3 GetScaleFactor() const;
 	XMFLOAT4X4 GetWorldMatrix();
 
-	// ¹Ù¿îµù ¹Ú½º Ãß°¡ ¿¹Á¤
+	// ë°”ìš´ë”© ë°•ìŠ¤ ì¶”ê°€ ì˜ˆì •
 
 	void RotateAbsAxis(float AxisX = 0.f, float AxisY = 0.f, float AxisZ = 0.f);
 	void RotateAbsAxis(XMFLOAT3 rot = {});
@@ -51,11 +53,14 @@ protected:
 	XMFLOAT3					m_LookVec{ 0.f, 0.f, 1.f };
 	XMFLOAT3					m_Position{};
 
-	XMFLOAT3					m_ScaleFactor{ 1.f, 1.f, 1.f };	// °¢°¢ xyz ½ºÄÉÀÏ Á¤µµ
+	XMFLOAT3					m_ScaleFactor{ 1.f, 1.f, 1.f };	// ê°ê° xyz ìŠ¤ì¼€ì¼ ì •ë„
 
-	UINT						m_StartSlot{};
+	union {
+		UINT					m_StartSlot{};
+		UINT					m_RootParameterIndex;
+	};
 
-	// Material Ãß°¡ ¿¹Á¤
+	// Material ì¶”ê°€ ì˜ˆì •
 
 	std::shared_ptr<CMesh>		m_Mesh{};
 };
@@ -80,11 +85,11 @@ public:
 	void SetParentMat(XMFLOAT4X4 mat);
 
 	XMFLOAT4X4 GetHierarchyWorldMat();
-	std::vector<std::shared_ptr<CHierarchyGameObjectDX11>>& GetChilds();
+	std::vector<std::shared_ptr<CGameObject>>& GetChilds();
 
 	void Render(void* command);
 protected:
 	XMFLOAT4X4								m_ParentWorldMat{};
 	XMFLOAT4X4								m_HierarchyWorldMat{};
-	std::vector<std::shared_ptr<CHierarchyGameObjectDX11>>	m_Childs{};
+	std::vector<std::shared_ptr<CGameObject>>	m_Childs{};
 };

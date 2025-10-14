@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Shaders.h"
 
 class CShaderDX11DrawTriangleShader : public CShaderDX11 {

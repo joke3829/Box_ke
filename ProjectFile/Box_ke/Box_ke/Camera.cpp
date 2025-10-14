@@ -1,4 +1,4 @@
-#include "Camera.h"
+ï»¿#include "Camera.h"
 
 CCamera::CCamera(float fov, float aspect, float nearZ, float farZ)
 {
@@ -13,6 +13,11 @@ CCamera::CCamera(UINT viewWidth, UINT viewHeight, float nearZ, float farZ)
 void CCamera::SetStartSlot(UINT slot)
 {
 	m_StartSlot = slot;
+}
+
+void CCamera::SetRootParameterIndex(UINT index)
+{
+	m_RootParameterIndex = index;
 }
 
 void CCamera::ModifyProjection(float fov, float aspect, float nearZ, float farZ)
@@ -128,7 +133,7 @@ void CCameraDX11::UpdateCameraBuffer(void* command)
 	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
 	XMMATRIX Mat;
 	XMMATRIX viewProj;
-	if (m_bThirdPerson && m_Target) {	// º¯°æ ¿¹Á¤
+	if (m_bThirdPerson && m_Target) {	// ë³€ê²½ ì˜ˆì •
 		Mat = XMMatrixLookToLH(XMLoadFloat3(&m_EYE), XMLoadFloat3(&m_LookVec), XMLoadFloat3(&m_UpVec));
 		viewProj = Mat * m_ProjectionMatrix;
 		Mat = XMMatrixInverse(nullptr, viewProj);

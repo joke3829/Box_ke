@@ -130,6 +130,7 @@
     <ClInclude Include="Box_ke.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="GameFramework.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MyObject.h" />
     <ClInclude Include="MyScene.h" />
@@ -146,6 +147,7 @@
     <ClCompile Include="Box_ke.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="GameFramework.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MyObject.cpp" />
     <ClCompile Include="MyScene.cpp" />
