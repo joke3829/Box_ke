@@ -44,8 +44,30 @@ void CPhongShadingMaterialDX11::UpdateMaterialBuffer(ID3D11DeviceContext* comman
 	command->Unmap(m_MaterialBuffer.Get(), 0);
 }
 
-void CPhongShadingMaterialDX11::SetShaderVariable(void* command)
+void CPhongShadingMaterialDX11::SetShaderVariable(void* command, ShaderType type)
 {
 	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
-	context->PSSetConstantBuffers(m_StartSlot, 1, m_MaterialBuffer.GetAddressOf());
+	switch(type) {
+	case ST_VS:
+		context->VSSetConstantBuffers(m_StartSlot, 1, m_MaterialBuffer.GetAddressOf());
+		break;
+	case ST_HS:
+		context->HSSetConstantBuffers(m_StartSlot, 1, m_MaterialBuffer.GetAddressOf());
+		break;
+	case ST_DS:
+		context->DSSetConstantBuffers(m_StartSlot, 1, m_MaterialBuffer.GetAddressOf());
+		break;
+	case ST_GS:
+		context->GSSetConstantBuffers(m_StartSlot, 1, m_MaterialBuffer.GetAddressOf());
+		break;
+	case ST_PS:
+		context->PSSetConstantBuffers(m_StartSlot, 1, m_MaterialBuffer.GetAddressOf());
+		break;
+	case ST_CS:
+		context->CSSetConstantBuffers(m_StartSlot, 1, m_MaterialBuffer.GetAddressOf());
+		break;
+	default:
+		MessageBoxA(0, "Insert Invalid Type", "Fatal Error_DX11", MB_OK);
+		break;
+	}
 }

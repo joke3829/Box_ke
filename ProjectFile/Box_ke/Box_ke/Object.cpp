@@ -18,6 +18,12 @@ void CGameObject::SetMesh(std::shared_ptr<CMesh> mesh)
 	m_Mesh = mesh;
 }
 
+// 정상 작동하는지 확인 안해봄, 사용 권장 x
+void CGameObject::SetMaterials(std::vector<std::shared_ptr<CMaterial>> materials)
+{
+	m_Materials = materials;
+}
+
 void CGameObject::SetScaleFactor(float x, float y, float z)
 {
 	m_ScaleFactor = { x, y, z };
@@ -77,6 +83,11 @@ XMFLOAT4X4 CGameObject::GetWorldMatrix()
 {
 	UpdateWorldMat();		// 월드 행렬은 최신화 해서 넘겨준다.
 	return m_WorldMat;
+}
+
+std::vector<std::shared_ptr<CMaterial>>& CGameObject::GetMaterials()
+{
+	return m_Materials;
 }
 
 // X, Y, Z 절대 축을 이용한 회전
@@ -188,7 +199,10 @@ void CGameObjectDX11::Render(void* command)
 		XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(data.pData), XMMatrixTranspose(XMLoadFloat4x4(&m_WorldMat)));
 		context->Unmap(m_WorldBuffer.Get(), 0);
 		context->VSSetConstantBuffers(m_StartSlot, 1, m_WorldBuffer.GetAddressOf());
-		m_Mesh->Render(command);
+		for (UINT i = 0; i < m_Materials.size(); ++i) {			// Material의 개수만큼 렌더
+			m_Materials[i]->SetShaderVariable(command, ST_PS);	// PS에 Set
+			m_Mesh->Render(command, i);
+		}
 	}
 }
 
@@ -238,7 +252,10 @@ void CHierarchyGameObjectDX11::Render(void* command)
 		XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(data.pData), XMMatrixTranspose(XMLoadFloat4x4(&m_HierarchyWorldMat)));
 		context->Unmap(m_WorldBuffer.Get(), 0);
 		context->VSSetConstantBuffers(m_StartSlot, 1, m_WorldBuffer.GetAddressOf());
-		m_Mesh->Render(command);
+		for (UINT i = 0; i < m_Materials.size(); ++i) {			// Material의 개수만큼 렌더
+			m_Materials[i]->SetShaderVariable(command, ST_PS);	// PS에 Set
+			m_Mesh->Render(command, i);
+		}
 	}
 	for (std::shared_ptr<CGameObject>& child : m_Childs) {
 		auto* p = dynamic_cast<CHierarchyGameObjectDX11*>(child.get());

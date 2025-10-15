@@ -7,7 +7,7 @@
 #include "stdafx.h"
 
 struct PhongMaterialCbuffer {
-	XMFLOAT4	albedoColor{};
+	XMFLOAT4	diffuseColor{};
 	XMFLOAT4	specularColor{};
 	XMFLOAT4	ambientColor{};
 	XMFLOAT4	emissiveColor{};
@@ -20,7 +20,7 @@ public:
 	void SetStartSlot(UINT slot);
 	void SetRootParameterIndex(UINT index);
 
-	virtual void SetShaderVariable(void* command) {}
+	virtual void SetShaderVariable(void* command, ShaderType type = ST_NONE) {}
 protected:
 	union {
 		UINT					m_StartSlot{};
@@ -44,7 +44,7 @@ public:
 	CPhongShadingMaterialDX11(ID3D11Device* device, PhongMaterialCbuffer material);
 
 	void UpdateMaterialBuffer(ID3D11DeviceContext* command);
-	void SetShaderVariable(void* command);
+	void SetShaderVariable(void* command, ShaderType type = ST_NONE);
 protected:
 	ComPtr<ID3D11Buffer>			m_MaterialBuffer{};
 };

@@ -5,8 +5,9 @@ class CGameObject;
 
 // Camera Cbuffer	언제든지 변경 가능 
 struct CameraCBuffer {
-	XMFLOAT4X4 ViewProj;
-	XMFLOAT4X4 InvViewProj;
+	XMFLOAT4X4	ViewProj;
+	XMFLOAT4X4	InvViewProj;
+	XMFLOAT3	cameraEye;
 };
 
 class CCamera {

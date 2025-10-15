@@ -9,6 +9,7 @@
 #pragma once
 #include "stdafx.h"
 #include "Mesh.h"
+#include "Material.h"
 
 class CGameObject {
 public:
@@ -17,6 +18,7 @@ public:
 	virtual void UpdateWorldMat();
 
 	void SetMesh(std::shared_ptr<CMesh> mesh);
+	void SetMaterials(std::vector<std::shared_ptr<CMaterial>> material);
 
 	void SetScaleFactor(float x, float y, float z);
 	void SetScaleFactor(XMFLOAT3 scale);
@@ -33,6 +35,8 @@ public:
 	XMFLOAT3 GetPosition() const;
 	XMFLOAT3 GetScaleFactor() const;
 	XMFLOAT4X4 GetWorldMatrix();
+
+	std::vector<std::shared_ptr<CMaterial>>& GetMaterials();
 
 	// 바운딩 박스 추가 예정
 
@@ -60,7 +64,7 @@ protected:
 		UINT					m_RootParameterIndex;
 	};
 
-	// Material 추가 예정
+	std::vector<std::shared_ptr<CMaterial>>		m_Materials{};
 
 	std::shared_ptr<CMesh>		m_Mesh{};
 };

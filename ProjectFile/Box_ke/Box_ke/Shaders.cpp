@@ -7,7 +7,7 @@ ComPtr<ID3DBlob> CShader::CompileHLSL(LPCWSTR pFileName, LPCSTR pEntryPoint, LPC
 	ComPtr<ID3DBlob> pBlob{};
 	ComPtr<ID3DBlob> pErrorBlob{};
 
-	HRESULT hResult = D3DCompileFromFile(pFileName, nullptr, nullptr, pEntryPoint, pTarget, 0, 0, pBlob.GetAddressOf(), pErrorBlob.GetAddressOf());
+	HRESULT hResult = D3DCompileFromFile(pFileName, nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, pEntryPoint, pTarget, 0, 0, pBlob.GetAddressOf(), pErrorBlob.GetAddressOf());
 	if (FAILED(hResult)) {
 		const char* errorstr = static_cast<const char*>(pErrorBlob->GetBufferPointer());
 		MessageBoxA(0, errorstr, "Shader Compile Error", MB_OK);

@@ -94,3 +94,51 @@ void CShaderDX11TestShader::CreatePS(ID3D11Device* device)
 		PostQuitMessage(0);
 	}
 }
+
+// ============================================================
+
+CPhongLightShader::CPhongLightShader(ID3D11Device* device)
+{
+	CreateVSAndInputLayout(device);
+	CreatePS(device);
+}
+
+void CPhongLightShader::ShaderReCompile(void* device)
+{
+	ID3D11Device* td = reinterpret_cast<ID3D11Device*>(device);
+
+	CreateVSAndInputLayout(td);
+	CreatePS(td);
+}
+
+void CPhongLightShader::CreateVSAndInputLayout(ID3D11Device* device)
+{
+	ComPtr<ID3DBlob> pBlob = CompileHLSL(L"Shaders\\PhongShader.hlsl", "vsmain", "vs_5_0");
+	HRESULT hResult = device->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, m_VS.GetAddressOf());
+
+	if (FAILED(hResult)) {
+		MessageBoxA(0, "Failed CreateVertexShader()", "Fatal Error", MB_OK);
+		PostQuitMessage(0);
+	}
+
+	D3D11_INPUT_ELEMENT_DESC descs[]{
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 0, D3D11_INPUT_PER_VERTEX_DATA, 0}
+	};
+	hResult = device->CreateInputLayout(descs, ARRAYSIZE(descs), pBlob->GetBufferPointer(), pBlob->GetBufferSize(), m_InputLayout.GetAddressOf());
+	if (FAILED(hResult)) {
+		MessageBoxA(0, "Failed CreateInputLayout()", "Fatal Error", MB_OK);
+		PostQuitMessage(0);
+	}
+}
+
+void CPhongLightShader::CreatePS(ID3D11Device* device)
+{
+	ComPtr<ID3DBlob> pBlob = CompileHLSL(L"Shaders\\PhongShader.hlsl", "psmain", "ps_5_0");
+	HRESULT hResult = device->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, m_PS.GetAddressOf());
+
+	if (FAILED(hResult)) {
+		MessageBoxA(0, "Failed CreatePixelShader()", "Fatal Error", MB_OK);
+		PostQuitMessage(0);
+	}
+}

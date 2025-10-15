@@ -204,6 +204,78 @@ BoundingSphere CMesh::GetBoundingSphere()
 	return m_MeshBoundingSphere;
 }
 
+CNormalMesh::CNormalMesh(float width, float height, bool BasedOnViewport)
+	: CMesh(width, height, BasedOnViewport)
+{
+	m_Normals.reserve(4);
+	for (int i = 0; i < 4; ++i)
+		m_Normals.emplace_back(0.f, 0.f, -1.f);
+
+	m_NormalStride = sizeof(XMFLOAT3);
+}
+
+CNormalMesh::CNormalMesh(float width, float height, float depth, XMFLOAT3 center, bool haveIndex)
+	: CMesh(width, height, depth, center, haveIndex)
+{
+	if (haveIndex) {	// 정육면체가 아니면 부정확함, 사용 권장 x
+		m_Normals.assign(8, {});
+		XMVECTOR nor = XMVectorSet(-1.f, -1.f, -1.f, 0.f);
+		XMStoreFloat3(&m_Normals[0], XMVector3Normalize(nor));
+		nor = XMVectorSet(1.f, -1.f, -1.f, 0.f);
+		XMStoreFloat3(&m_Normals[1], XMVector3Normalize(nor));
+		nor = XMVectorSet(1.f, -1.f, 1.f, 0.f);
+		XMStoreFloat3(&m_Normals[2], XMVector3Normalize(nor));
+		nor = XMVectorSet(-1.f, -1.f, 1.f, 0.f);
+		XMStoreFloat3(&m_Normals[3], XMVector3Normalize(nor));
+		nor = XMVectorSet(-1.f, 1.f, -1.f, 0.f);
+		XMStoreFloat3(&m_Normals[4], XMVector3Normalize(nor));
+		nor = XMVectorSet(1.f, 1.f, -1.f, 0.f);
+		XMStoreFloat3(&m_Normals[5], XMVector3Normalize(nor));
+		nor = XMVectorSet(1.f, 1.f, 1.f, 0.f);
+		XMStoreFloat3(&m_Normals[6], XMVector3Normalize(nor));
+		nor = XMVectorSet(-1.f, 1.f, 1.f, 0.f);
+		XMStoreFloat3(&m_Normals[7], XMVector3Normalize(nor));
+	}
+	else {
+		m_Normals.assign(36, {});
+		for (int i = 0; i < 6; ++i) m_Normals[i] = { 0.f, -1.f, 0.f };
+		for (int i = 0; i < 6; ++i) m_Normals[i + 6] = { 0.f, 0.f, -1.f };
+		for (int i = 0; i < 6; ++i) m_Normals[i + 12] = { 1.f, 0.f, 0.f };
+		for (int i = 0; i < 6; ++i) m_Normals[i + 18] = { 0.f, 0.f, 1.f };
+		for (int i = 0; i < 6; ++i) m_Normals[i + 24] = { -1.f, 0.f, 0.f };
+		for (int i = 0; i < 6; ++i) m_Normals[i + 30] = { 0.f, 1.f, 0.f };
+	}
+
+	m_NormalStride = sizeof(XMFLOAT3);
+}
+
+CNormalMesh::CNormalMesh(float radius, UINT sampleCount, XMFLOAT3 center)
+	: CMesh(radius, sampleCount, center)
+{
+	if (sampleCount < 8) sampleCount = 8;
+
+	m_Normals.emplace_back(0.f, 1.f, 0.f);
+
+	float vertical = 180.f / (sampleCount + 1);
+	float horizon = 360.f / sampleCount;
+
+	for (UINT i = 0; i < sampleCount; ++i) {
+		float ver = 90.0f - (vertical * static_cast<float>(i + 1));
+		float radver = XMConvertToRadians(ver);
+		float horRadius = radius * cosf(radver);
+		for (UINT j = 0; j < sampleCount; ++j) {
+			float hor = horizon * j;
+			float radhor = XMConvertToRadians(hor);
+			XMFLOAT3 normal = { horRadius * cosf(radhor) ,radius * sinf(radver),  horRadius * sinf(radhor) };
+			XMStoreFloat3(&normal, XMVector3Normalize(XMLoadFloat3(&normal)));
+			m_Normals.emplace_back(normal);
+		}
+	}
+	m_Normals.emplace_back(0.f, -1.f, 0.f);
+
+	m_NormalStride = sizeof(XMFLOAT3);
+}
+
 // DX11===========================================================================
 
 // device는 null이 될 수 없다
@@ -221,7 +293,6 @@ CMeshDX11::CMeshDX11(void* device, float width, float height, float depth, void*
 	m_PT = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 }
 
-// 사용 금지
 CMeshDX11::CMeshDX11(void* device, float radius, UINT sampleCount, XMFLOAT3 center, void* command)
 	: CMesh(radius, sampleCount, center)
 {
@@ -274,6 +345,93 @@ void CMeshDX11::Render(void* command, UINT numIndex)
 	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
 	context->IASetPrimitiveTopology(m_PT);
 	context->IASetVertexBuffers(0, 1, m_VertexBuffer.GetAddressOf(), &m_VertexStride, &m_VertexOffset);
+	size_t indexSize = m_IndexBuffers.size();
+	if (indexSize > 0) {
+		if (numIndex >= indexSize) numIndex = indexSize - 1;
+		context->IASetIndexBuffer(m_IndexBuffers[numIndex].Get(), DXGI_FORMAT_R32_UINT, 0);
+		context->DrawIndexed(m_Indices[numIndex].size(), 0, 0);
+	}
+	else {
+		context->DrawInstanced(m_Vertices.size() * 3, 1, 0, 0);
+	}
+}
+
+
+CNormalMeshDX11::CNormalMeshDX11(void* device, float width, float height, void* command, bool BasedOnViewport)
+	: CNormalMesh(width, height, BasedOnViewport)
+{
+	InitBuffers(device, command);
+	m_PT = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+}
+
+CNormalMeshDX11::CNormalMeshDX11(void* device, float width, float height, float depth, void* command, XMFLOAT3 center, bool haveIndex)
+	: CNormalMesh(width, height, depth, center, haveIndex)
+{
+	InitBuffers(device, command);
+	m_PT = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+}
+
+CNormalMeshDX11::CNormalMeshDX11(void* device, float radius, UINT sampleCount, XMFLOAT3 center, void* command)
+	: CNormalMesh(radius, sampleCount, center)
+{
+	InitBuffers(device, command);
+	m_PT = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+}
+
+void CNormalMeshDX11::InitBuffers(void* device, void* command)
+{
+	ID3D11Device* dev = reinterpret_cast<ID3D11Device*>(device);
+
+	D3D11_BUFFER_DESC desc{};
+	desc.ByteWidth = m_VertexStride * m_Vertices.size();
+	desc.Usage = D3D11_USAGE_IMMUTABLE;
+	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA data{};
+	data.pSysMem = m_Vertices.data();
+	dev->CreateBuffer(&desc, &data, m_VertexBuffer.GetAddressOf());
+
+	desc.ByteWidth = m_NormalStride * m_Normals.size();
+	data.pSysMem = m_Normals.data();
+	dev->CreateBuffer(&desc, &data, m_NormalBuffer.GetAddressOf());
+
+	desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	for (int i = 0; i < m_Indices.size(); ++i) {
+		desc.ByteWidth = sizeof(UINT) * m_Indices[i].size();
+		data.pSysMem = m_Indices[i].data();
+		ComPtr<ID3D11Buffer> tempBuffer;
+		dev->CreateBuffer(&desc, &data, tempBuffer.GetAddressOf());
+		m_IndexBuffers.push_back(tempBuffer);
+	}
+}
+
+void CNormalMeshDX11::Render(void* command)
+{
+	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
+	context->IASetPrimitiveTopology(m_PT);
+	ID3D11Buffer* buffers[] = { m_VertexBuffer.Get(), m_NormalBuffer.Get() };
+	UINT strides[] = { m_VertexStride, m_NormalStride };
+	UINT offsets[] = { m_VertexOffset, m_NormalOffset };
+	context->IASetVertexBuffers(0, 2, buffers, strides, offsets);
+	if (m_IndexBuffers.size() > 0) {
+		for (int i = 0; i < m_IndexBuffers.size(); ++i) {
+			context->IASetIndexBuffer(m_IndexBuffers[i].Get(), DXGI_FORMAT_R32_UINT, 0);
+			context->DrawIndexed(m_Indices[i].size(), 0, 0);
+		}
+	}
+	else {
+		context->DrawInstanced(m_Vertices.size() * 3, 1, 0, 0);
+	}
+}
+
+void CNormalMeshDX11::Render(void* command, UINT numIndex)
+{
+	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
+	context->IASetPrimitiveTopology(m_PT);
+	ID3D11Buffer* buffers[] = { m_VertexBuffer.Get(), m_NormalBuffer.Get() };
+	UINT strides[] = { m_VertexStride, m_NormalStride };
+	UINT offsets[] = { m_VertexOffset, m_NormalOffset };
+	context->IASetVertexBuffers(0, 2, buffers, strides, offsets);
 	size_t indexSize = m_IndexBuffers.size();
 	if (indexSize > 0) {
 		if (numIndex >= indexSize) numIndex = indexSize - 1;

@@ -56,6 +56,7 @@ cbuffer camera : register(b1)
 {
     float4x4 viewproj;
     float4x4 Invvp;
+    float3 eye;
 };
 
 TestVertextOutput vsTest(float3 pos : POSITION)

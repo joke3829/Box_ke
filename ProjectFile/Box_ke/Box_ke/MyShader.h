@@ -19,3 +19,12 @@ protected:
 	void CreateVSAndInputLayout(ID3D11Device* device);
 	void CreatePS(ID3D11Device* device);
 };
+
+class CPhongLightShader : public CShaderDX11 {
+public:
+	CPhongLightShader(ID3D11Device* device);
+	void ShaderReCompile(void* device);
+protected:
+	void CreateVSAndInputLayout(ID3D11Device* device);
+	void CreatePS(ID3D11Device* device);
+};

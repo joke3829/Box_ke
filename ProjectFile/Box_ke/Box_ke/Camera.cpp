@@ -151,6 +151,7 @@ void CCameraDX11::UpdateCameraBuffer(void* command)
 	CameraCBuffer* p = reinterpret_cast<CameraCBuffer*>(mapped.pData);
 	XMStoreFloat4x4(&(p->ViewProj), viewProj);
 	XMStoreFloat4x4(&(p->InvViewProj), Mat);
+	p->cameraEye = m_EYE;
 	context->Unmap(m_CameraBuffer.Get(), 0);
 }
 
