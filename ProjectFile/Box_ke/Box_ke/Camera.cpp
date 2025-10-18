@@ -1,4 +1,4 @@
-﻿#include "Camera.h"
+#include "Camera.h"
 
 CCamera::CCamera(float fov, float aspect, float nearZ, float farZ)
 {
@@ -145,7 +145,7 @@ void CCameraDX11::UpdateCameraBuffer(void* command)
 	}
 
 	viewProj = XMMatrixTranspose(viewProj);
-	Mat = XMMatrixTranspose(viewProj);
+	Mat = XMMatrixTranspose(Mat);
 	D3D11_MAPPED_SUBRESOURCE mapped{};
 	context->Map(m_CameraBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
 	CameraCBuffer* p = reinterpret_cast<CameraCBuffer*>(mapped.pData);

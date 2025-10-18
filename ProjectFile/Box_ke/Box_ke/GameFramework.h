@@ -1,4 +1,4 @@
-﻿// ==========================================================
+// ==========================================================
 // GameFramework.h
 // 게임프레임워크를 DX 버젼별로 모아둔 헤더
 // 12는 추후 추가 예정
@@ -50,6 +50,8 @@ private:
 	
 	ComPtr<ID3D11RenderTargetView>	m_RerderTargetView{};
 	ComPtr<ID3D11DepthStencilView>	m_DepthStencilView{};
+
+
 };
 
 

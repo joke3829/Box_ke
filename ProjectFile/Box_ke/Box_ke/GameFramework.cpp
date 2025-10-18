@@ -1,4 +1,4 @@
-﻿// ===========================================================
+// ===========================================================
 // GameFramework.cpp
 // Framework 함수들의 정의를 정리해둔 cpp 파일
 // ===========================================================
@@ -44,7 +44,9 @@ bool CGameFrameworkDX11::Initialize(HWND hWnd, UINT clientWidth, UINT clientHeig
 	if (!InitSwapChain()) return false;
 	if (!InitRTVDSV()) return false;
 
-	m_Scene = std::make_shared<CShaderTestSceneDX11>();
+	m_Scene = std::make_shared<CDeferredRenderSceneDX11>(m_Device, m_SwapChain, 
+		m_RerderTargetView, m_DepthStencilView, m_clientWidth, m_clientHeight);
+	//m_Scene = std::make_shared<CShaderTestSceneDX11>();
 	m_Scene->Setup(m_Device.Get(), m_DeviceContext.Get());
 
 	m_Timer = std::make_shared<CTimer>();
