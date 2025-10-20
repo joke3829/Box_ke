@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Object.h"
 
 class CCircleObjectDX11 : public CHierarchyGameObjectDX11 {
@@ -11,5 +11,11 @@ public:
 class COrbitObjectDX11 : public CHierarchyGameObjectDX11 {
 public:
 	COrbitObjectDX11(void* device);
+	void UpdateObject(float elapsedTime);
+};
+
+class CBodyObjectDX11 : public CHierarchyGameObjectDX11 {
+public:
+	CBodyObjectDX11(void* device);
 	void UpdateObject(float elapsedTime);
 };

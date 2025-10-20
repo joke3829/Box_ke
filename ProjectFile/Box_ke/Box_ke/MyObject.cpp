@@ -1,4 +1,4 @@
-﻿#include "MyObject.h"
+#include "MyObject.h"
 
 CCircleObjectDX11::CCircleObjectDX11(void* command)
 	: CHierarchyGameObjectDX11(command)
@@ -32,4 +32,13 @@ void COrbitObjectDX11::UpdateObject(float elapsedTime)
 	RotateLocalAxis(rotAngle, rotAngle, rotAngle);
 	for (int i = 0; i < m_Childs.size(); ++i)
 		m_Childs[i]->UpdateObject(elapsedTime);
+}
+
+CBodyObjectDX11::CBodyObjectDX11(void* device) : CHierarchyGameObjectDX11(device)
+{
+}
+
+void CBodyObjectDX11::UpdateObject(float elapsedTime)
+{
+	
 }
