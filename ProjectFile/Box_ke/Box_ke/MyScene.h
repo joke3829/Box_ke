@@ -72,6 +72,7 @@ public:
 
 	void PreRender(void* command = nullptr);
 	void Render(void* command = nullptr);
+	void PostRender(void* command = nullptr);
 protected:
 	void ResizeTargets();
 	void CreateTargets();
@@ -98,7 +99,27 @@ protected:
 	std::shared_ptr<CCamera>						m_Camera{};
 	std::vector<std::shared_ptr<CGameObject>>		m_Objects{};
 
+	// Bloom
+	std::shared_ptr<CShader>						m_ResultRenderShader{};
+	std::shared_ptr<CShader>						m_LuminanceShader{};
+
+	ComPtr<ID3D11Texture2D>							m_CSInput{};
+	ComPtr<ID3D11ShaderResourceView>				m_CSInSRV{};
+	ComPtr<ID3D11UnorderedAccessView>				m_CSInUAV{};
+
+	ComPtr<ID3D11Texture2D>							m_CSOutput{};
+	ComPtr<ID3D11ShaderResourceView>				m_CSOutSRV{};
+	ComPtr<ID3D11UnorderedAccessView>				m_CSOutUAV{};
+
+	ComPtr<ID3D11RenderTargetView>					m_OutputRTV{};
+	ComPtr<ID3D11ShaderResourceView>				m_OutputSRV{};
+	ComPtr<ID3D11Texture2D>							m_OutputBuffer{};
+
+	XMUINT3											m_DispatchRange{};
+
 	D3D11_VIEWPORT									m_Viewport{};
 	POINT							oldCursor{};
 	bool							click{};
+
+	bool							m_OnBloom{ true };
 };

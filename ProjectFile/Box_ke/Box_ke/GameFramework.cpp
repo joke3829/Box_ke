@@ -40,6 +40,8 @@ bool CGameFrameworkDX11::Initialize(HWND hWnd, UINT clientWidth, UINT clientHeig
 	m_hWnd = hWnd;
 	m_clientWidth = clientWidth; m_clientHeight = clientHeight;
 
+	m_LimitedFrame = 120.f;
+
 	if (!InitDevice()) return false;
 	if (!InitSwapChain()) return false;
 	if (!InitRTVDSV()) return false;

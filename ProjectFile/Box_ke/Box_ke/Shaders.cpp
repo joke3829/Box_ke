@@ -1,4 +1,4 @@
-﻿#include "Shaders.h"
+#include "Shaders.h"
 
 // Base============================================================
 
@@ -61,6 +61,17 @@ void CShaderDX11::SetShader(void* command)
 		context->PSSetShader(nullptr, nullptr, 0);
 }
 
+
+void CComputeShaderDX11::SetShader(void* command)
+{
+	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
+	context->CSSetShader(m_CS.Get(), nullptr, 0);
+}
+
+void CComputeShaderDX11::ShaderReCompile(void* device)
+{
+	CreateCS(reinterpret_cast<ID3D11Device*>(device));
+}
 // ===============================================================
 
 

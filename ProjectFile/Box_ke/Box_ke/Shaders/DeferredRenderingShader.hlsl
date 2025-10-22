@@ -145,6 +145,12 @@ float4 DeferredRenderTwoPathPS(DT_PS_INPUT input) : SV_Target
         diffuseColor, float4(specularAndSh.rgb, 1.f), diffuseColor, 
         float4(emissiveAndDepth.rgb, 1.f), specularAndSh.a, float3(0.f, 0.f, 0.f)
     };
-
+    
     return float4(BlinnPhongLightingResult(wPos, wNormal, cameraEye, tempColor, g_Light), 1.f);
+}
+
+
+float4 ResultRenderPS(DT_PS_INPUT input) : SV_Target
+{
+    return g_MRT[0].Sample(g_Sample, input.uv);
 }

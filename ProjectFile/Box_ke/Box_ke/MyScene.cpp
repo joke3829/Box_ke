@@ -352,6 +352,21 @@ void CDeferredRenderSceneDX11::CreateTargets()
 		m_RTVs.push_back(rtv);
 		m_SRVs.push_back(srv);
 	}
+
+	// Bloom Resource
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	m_Device->CreateTexture2D(&desc, nullptr, m_OutputBuffer.GetAddressOf());
+	m_Device->CreateRenderTargetView(m_OutputBuffer.Get(), nullptr, m_OutputRTV.GetAddressOf());
+	m_Device->CreateShaderResourceView(m_OutputBuffer.Get(), nullptr, m_OutputSRV.GetAddressOf());
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+	m_Device->CreateTexture2D(&desc, nullptr, m_CSInput.GetAddressOf());
+	m_Device->CreateShaderResourceView(m_CSInput.Get(), nullptr, m_CSInSRV.GetAddressOf());
+	m_Device->CreateUnorderedAccessView(m_CSInput.Get(), nullptr, m_CSInUAV.GetAddressOf());
+
+	m_Device->CreateTexture2D(&desc, nullptr, m_CSOutput.GetAddressOf());
+	m_Device->CreateShaderResourceView(m_CSOutput.Get(), nullptr, m_CSOutSRV.GetAddressOf());
+	m_Device->CreateUnorderedAccessView(m_CSOutput.Get(), nullptr, m_CSOutUAV.GetAddressOf());
+
 }
 
 void CDeferredRenderSceneDX11::BuildObjects()
@@ -421,6 +436,11 @@ void CDeferredRenderSceneDX11::BuildObjects()
 		m_Objects.back()->RotateAbsAxis(90.0f);
 		m_Objects.back()->SetPosition(0.f, -20.f, 0.f);
 	}
+
+	// Bloom Shader
+	m_ResultRenderShader = std::make_shared<CResultRenderShaderDX11>(m_Device.Get());
+	m_LuminanceShader = std::make_shared<CLuminanceComputeShaderDX11>(m_Device.Get());
+	m_DispatchRange = { m_ClientWidth / 32 + 1, m_ClientHeight / 32 + 1, 1 };
 }
 
 void CDeferredRenderSceneDX11::ProcessInput(float elapsedTime)
@@ -463,6 +483,12 @@ void CDeferredRenderSceneDX11::KeyboardMessageProcessing(HWND hWnd, UINT message
 		case '2':
 			m_RenderShader->ShaderReCompile(m_Device.Get());
 			break;
+		case '3':
+			m_LuminanceShader->ShaderReCompile(m_Device.Get());
+			break;
+		case 'B':
+			m_OnBloom = !m_OnBloom;
+			break;
 		}
 		break;
 	}
@@ -500,8 +526,8 @@ void CDeferredRenderSceneDX11::MouseMessageProcessing(HWND hWnd, UINT message, W
 
 void CDeferredRenderSceneDX11::UpdateObject(float elapsedTime, void* command)
 {
-	for (std::shared_ptr<CGameObject>& object : m_Objects)
-		object->UpdateObject(elapsedTime);
+	/*for (std::shared_ptr<CGameObject>& object : m_Objects)
+		object->UpdateObject(elapsedTime);*/
 }
 
 void CDeferredRenderSceneDX11::PreRender(void* command)
@@ -528,6 +554,28 @@ void CDeferredRenderSceneDX11::Render(void* command)
 	TwoPathRender(context);
 }
 
+void CDeferredRenderSceneDX11::PostRender(void* command)
+{
+	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
+	if (m_OnBloom) {
+		context->CopyResource(m_CSInput.Get(), m_OutputBuffer.Get());
+
+		m_LuminanceShader->SetShader(context);
+		context->CSSetShaderResources(0, 1, m_CSInSRV.GetAddressOf());
+		context->CSSetUnorderedAccessViews(0, 1, m_CSOutUAV.GetAddressOf(), nullptr);
+
+		context->Dispatch(m_DispatchRange.x, m_DispatchRange.y, m_DispatchRange.z);
+
+		context->CopyResource(m_OutputBuffer.Get(), m_CSOutput.Get());
+	}
+	m_ResultRenderShader->SetShader(context);
+
+	context->OMSetRenderTargets(1, m_MainRTV.GetAddressOf(), m_MainDSV.Get());
+	context->PSSetShaderResources(0, 1, m_OutputSRV.GetAddressOf());
+
+	context->DrawInstanced(6, 1, 0, 0);
+}
+
 void CDeferredRenderSceneDX11::OnePathRender(ID3D11DeviceContext* context)
 {
 	m_MRTShader->SetShader(context);
@@ -540,7 +588,7 @@ void CDeferredRenderSceneDX11::TwoPathRender(ID3D11DeviceContext* context)
 {
 	m_RenderShader->SetShader(context);
 
-	context->OMSetRenderTargets(1, m_MainRTV.GetAddressOf(), m_MainDSV.Get());
+	context->OMSetRenderTargets(1, m_OutputRTV.GetAddressOf(), m_MainDSV.Get());
 	ID3D11ShaderResourceView* views[4] = {
 		m_SRVs[0].Get(), m_SRVs[1].Get(), m_SRVs[2].Get(), m_SRVs[3].Get()
 	};

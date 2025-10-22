@@ -47,3 +47,22 @@ protected:
 	void CreateVSAndInputLayout(ID3D11Device* device);
 	void CreatePS(ID3D11Device* device);
 };
+
+class CResultRenderShaderDX11 : public CShaderDX11 {
+public:
+	CResultRenderShaderDX11(ID3D11Device* device);
+	void ShaderReCompile(void* device);
+protected:
+	void CreateDepthStencilState(ID3D11Device* device);
+	void CreateVSAndInputLayout(ID3D11Device* device);
+	void CreatePS(ID3D11Device* device);
+};
+
+// ComputeShader
+
+class CLuminanceComputeShaderDX11 : public CComputeShaderDX11 {
+public:
+	CLuminanceComputeShaderDX11(ID3D11Device* device);
+protected:
+	void CreateCS(ID3D11Device* device);
+};

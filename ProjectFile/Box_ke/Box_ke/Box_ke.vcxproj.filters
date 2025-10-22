@@ -170,5 +170,8 @@
     <None Include="Shaders\DeferredRenderingShader.hlsl">
       <Filter>소스 파일\Shader\ShaderFile</Filter>
     </None>
+    <None Include="Shaders\BloomComputeShader.hlsl">
+      <Filter>소스 파일\Shader\ShaderFile</Filter>
+    </None>
   </ItemGroup>
 </Project>
