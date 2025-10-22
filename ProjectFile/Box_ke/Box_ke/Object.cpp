@@ -44,6 +44,8 @@ void CGameObject::SetPosition(XMFLOAT3 pos)
 	m_Position = pos;
 }
 
+
+
 void CGameObject::SetStartSlot(UINT slot)
 {
 	m_StartSlot = slot;
@@ -72,6 +74,12 @@ XMFLOAT3 CGameObject::GetLookVec() const
 XMFLOAT3 CGameObject::GetPosition() const
 {
 	return m_Position;
+}
+
+XMFLOAT3 CGameObject::GetRotation() const
+{
+	
+	return m_Rotation;
 }
 
 XMFLOAT3 CGameObject::GetScaleFactor() const
@@ -135,33 +143,43 @@ void CGameObject::RotateAbsAxis(XMFLOAT3 rot)
 void CGameObject::RotateLocalAxis(float right, float up, float look)
 {
 	if (right != 0.f) {
+
 		XMStoreFloat3(&m_UpVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_UpVec), XMMatrixRotationAxis(XMLoadFloat3(&m_RightVec), XMConvertToRadians(right)))));
 		XMStoreFloat3(&m_LookVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_LookVec), XMMatrixRotationAxis(XMLoadFloat3(&m_RightVec), XMConvertToRadians(right)))));
 	}
 	if (up != 0.f) {
+
 		XMStoreFloat3(&m_RightVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_RightVec), XMMatrixRotationAxis(XMLoadFloat3(&m_UpVec), XMConvertToRadians(up)))));
 		XMStoreFloat3(&m_LookVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_LookVec), XMMatrixRotationAxis(XMLoadFloat3(&m_UpVec), XMConvertToRadians(up)))));
 	}
 	if (look != 0.f) {
+
 		XMStoreFloat3(&m_RightVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_RightVec), XMMatrixRotationAxis(XMLoadFloat3(&m_LookVec), XMConvertToRadians(look)))));
 		XMStoreFloat3(&m_UpVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_UpVec), XMMatrixRotationAxis(XMLoadFloat3(&m_LookVec), XMConvertToRadians(look)))));
 	}
+
+	m_Rotation = XMFLOAT3(atan2f(m_UpVec.y, m_UpVec.z), atan2f(m_LookVec.x, m_LookVec.z), atan2f(m_LookVec.y, m_UpVec.z));
 }
 
 void CGameObject::RotateLocalAxis(XMFLOAT3 rot)
 {
 	if (rot.x != 0.f) {
+		
 		XMStoreFloat3(&m_UpVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_UpVec), XMMatrixRotationAxis(XMLoadFloat3(&m_RightVec), XMConvertToRadians(rot.x)))));
 		XMStoreFloat3(&m_LookVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_LookVec), XMMatrixRotationAxis(XMLoadFloat3(&m_RightVec), XMConvertToRadians(rot.x)))));
 	}
 	if (rot.y != 0.f) {
+		
 		XMStoreFloat3(&m_RightVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_RightVec), XMMatrixRotationAxis(XMLoadFloat3(&m_UpVec), XMConvertToRadians(rot.y)))));
 		XMStoreFloat3(&m_LookVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_LookVec), XMMatrixRotationAxis(XMLoadFloat3(&m_UpVec), XMConvertToRadians(rot.y)))));
 	}
 	if (rot.z != 0.f) {
+		
 		XMStoreFloat3(&m_RightVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_RightVec), XMMatrixRotationAxis(XMLoadFloat3(&m_LookVec), XMConvertToRadians(rot.z)))));
 		XMStoreFloat3(&m_UpVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_UpVec), XMMatrixRotationAxis(XMLoadFloat3(&m_LookVec), XMConvertToRadians(rot.z)))));
 	}
+
+
 }
 
 void CGameObject::ResetWorldMat()

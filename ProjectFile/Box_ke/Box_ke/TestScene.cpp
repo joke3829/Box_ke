@@ -12,8 +12,8 @@ void CHeroScene::Setup(void* device, void* command)
 
 	m_Viewport = { 0.f, 0.f, 1920.f, 1080.f, 0.f, 1.f };
 	// 메인 몸통, 서브 몸통 2개 (왼, 오), 메인 팔 2개 (왼, 오), 서브 팔 2개 (왼, 오)
-	std::shared_ptr<CMesh> BodyMesh = std::make_shared<CNormalMeshDX11>(device, 2.5f, 10.f, 2.5f);
-	std::shared_ptr<CMesh> ArmMesh = std::make_shared<CNormalMeshDX11>(device, 2.5f, 10.f, 2.5f);
+	std::shared_ptr<CMesh> BodyMesh = std::make_shared<CNormalMeshDX11>(device, 2.5f, 15.f, 2.5f);
+	std::shared_ptr<CMesh> ArmMesh = std::make_shared<CNormalMeshDX11>(device, 2.5f, 15.f, 2.5f);
 	
 	std::shared_ptr<CMesh> FloorMesh = std::make_shared<CNormalMeshDX11>(device, 100.f, 100.f);
 
@@ -52,30 +52,64 @@ void CHeroScene::Setup(void* device, void* command)
 
 
 	{
-		
-		std::shared_ptr<CGameObject> body = std::make_shared<CBodyObjectDX11>(device);
-		m_Objects.push_back(body);
-		auto* p = dynamic_cast<CBodyObjectDX11*>(body.get());
-		p->SetMesh(BodyMesh);
-		p->GetMaterials().push_back(BodyMaterial);
-		p->SetPosition(0.f, 0.f, 0.f);
+		std::shared_ptr<CGameObject> hero = std::make_shared<CHeroObjectDX11>(device);
+		m_Objects.push_back(hero);
+		auto* p_Hero = static_cast<CHeroObjectDX11*>(hero.get());
+		auto& c_Hero = p_Hero->GetChilds();
+		m_Hero = hero;
 
-		auto& c = p->GetChilds();
-		std::shared_ptr<CHierarchyGameObjectDX11> cp = std::make_shared<CBodyObjectDX11>(device);
-	
-		cp->SetMesh(ArmMesh);
-		cp->GetMaterials().push_back(ArmMaterial);
-		cp->SetPosition(2.5f, 0.f, 0.f);
-		c.push_back(cp);
+		// 왼쪽 몸체
+		std::shared_ptr<CHierarchyGameObjectDX11> LeftBody = std::make_shared<CBodyObjectDX11>(device);
+		LeftBody->SetMesh(BodyMesh);
+		LeftBody->GetMaterials().push_back(BodyMaterial);
+		LeftBody->SetPosition(-1.25f, 0.f, 0.f);
+		c_Hero.push_back(LeftBody);
 
-		cp = std::make_shared<CBodyObjectDX11>(device);
+		// 오른쪽 몸체
+		std::shared_ptr<CHierarchyGameObjectDX11> RightBody = std::make_shared<CBodyObjectDX11>(device);
+		RightBody->SetMesh(BodyMesh);
+		RightBody->GetMaterials().push_back(BodyMaterial);
+		RightBody->SetPosition(1.25f, 0.f, 0.f);
+		c_Hero.push_back(RightBody);
 
-		cp->SetMesh(ArmMesh);
-		cp->GetMaterials().push_back(ArmMaterial);
-		cp->SetPosition(-2.5f, 0.f, 0.f);
-		c.push_back(cp);
+		// 왼쪽 팔
+		std::shared_ptr<CHierarchyGameObjectDX11> LeftArm = std::make_shared<CArmObjectDX11>(device);
+
+		auto* p_LeftBody = static_cast<CBodyObjectDX11*>(LeftBody.get());
+		auto& c_LeftBody = p_LeftBody->GetChilds();
+
+		LeftArm->SetMesh(ArmMesh);
+		LeftArm->GetMaterials().push_back(ArmMaterial);
+		LeftArm->SetPosition(-2.5f, 0.f, 0.f);
+		c_LeftBody.push_back(LeftArm);
+
+		// 오른쪽 팔
+
+		std::shared_ptr<CHierarchyGameObjectDX11> RightArm = std::make_shared<CArmObjectDX11>(device);
 
 
+		auto* p_RightBody = static_cast<CBodyObjectDX11*>(RightBody.get());
+		auto& c_RightBody = p_RightBody->GetChilds();
+
+		RightArm->SetMesh(ArmMesh);
+		RightArm->GetMaterials().push_back(ArmMaterial);
+		RightArm->SetPosition(2.5f, 0.f, 0.f);
+		c_RightBody.push_back(RightArm);
+
+		auto* p_RightArm = static_cast<CArmObjectDX11*>(RightArm.get());
+		auto* p_LeftArm = static_cast<CArmObjectDX11*>(LeftArm.get());
+
+		p_RightArm->SetTransformAngleAnim(360.f);
+		p_RightArm->SetTransformReadyTime(0.f);
+
+		p_RightBody->SetTransformAngleAnim(270.f);
+		p_RightBody->SetTransformReadyTime(90.f);
+
+		p_LeftBody->SetTransformAngleAnim(180.f);
+		p_LeftBody->SetTransformReadyTime(180.f);
+
+		p_LeftArm->SetTransformAngleAnim(90.f);
+		p_LeftArm->SetTransformReadyTime(270.f);
 
 
 		m_Objects.emplace_back(std::make_shared<CGameObjectDX11>(device));
@@ -113,6 +147,7 @@ void CHeroScene::ProcessInput(float elapsedTime)
 	if (keyboard[VK_CONTROL] & 0xf0) {
 		m_Camera->Move(10.f, elapsedTime, XMFLOAT3(0.f, -1.f, 0.f));
 	}
+	
 }
 
 void CHeroScene::KeyboardMessageProcessing(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -122,6 +157,11 @@ void CHeroScene::KeyboardMessageProcessing(HWND hWnd, UINT message, WPARAM wPara
 		switch (wParam) {
 		case '1':
 			m_Shader->ShaderReCompile(tempdev);
+			break;
+		case '2':
+			if (m_Hero) {
+				static_cast<CHeroObjectDX11*>(m_Hero.get())->SetRightRunningAnim(true);
+			}
 			break;
 		}
 		break;

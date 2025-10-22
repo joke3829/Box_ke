@@ -1,4 +1,4 @@
-﻿// ====================================================
+// ====================================================
 // Object.h
 // Object 정보를 정리한 헤더
 // 
@@ -17,6 +17,8 @@ public:
 	virtual void UpdateObject(float elapsedTime) {}
 	virtual void UpdateWorldMat();
 
+	virtual void UpdateAnim(float elapsedTime) {}	// 이거 새로 만들어도 되는지 물어보기
+
 	void SetMesh(std::shared_ptr<CMesh> mesh);
 	void SetMaterials(std::vector<std::shared_ptr<CMaterial>> material);
 
@@ -26,6 +28,8 @@ public:
 	void SetPosition(float x, float y, float z);
 	void SetPosition(XMFLOAT3 pos);
 
+
+
 	void SetStartSlot(UINT slot);
 	void SetRootParameterIndex(UINT index);
 
@@ -33,7 +37,9 @@ public:
 	XMFLOAT3 GetUpVec() const;
 	XMFLOAT3 GetLookVec() const;
 	XMFLOAT3 GetPosition() const;
+	XMFLOAT3 GetRotation() const;
 	XMFLOAT3 GetScaleFactor() const;
+
 	XMFLOAT4X4 GetWorldMatrix();
 
 	std::vector<std::shared_ptr<CMaterial>>& GetMaterials();
@@ -56,6 +62,7 @@ protected:
 	XMFLOAT3					m_UpVec{ 0.f, 1.f, 0.f };
 	XMFLOAT3					m_LookVec{ 0.f, 0.f, 1.f };
 	XMFLOAT3					m_Position{};
+	XMFLOAT3					m_Rotation{};
 
 	XMFLOAT3					m_ScaleFactor{ 1.f, 1.f, 1.f };	// 각각 xyz 스케일 정도
 
@@ -73,6 +80,7 @@ class CGameObjectDX11 : public CGameObject {
 public:
 	CGameObjectDX11(void* device);
 	virtual void UpdateObject(float elapsedTime) {}
+	virtual void UpdateAnim(float elapsedTime) {}	// 이거 새로 만들어도 되는지 물어보기
 
 	virtual void Render(void* command);
 protected:
@@ -84,6 +92,8 @@ public:
 	CHierarchyGameObjectDX11(void* device);
 
 	virtual void UpdateObject(float elapsedTime) {}
+	virtual void UpdateAnim(float elapsedTime) {}	// 이거 새로 만들어도 되는지 물어보기
+
 	virtual void UpdateWorldMat();
 
 	void SetParentMat(XMFLOAT4X4 mat);

@@ -26,5 +26,7 @@ protected:
 
 	ID3D11Device* tempdev{};
 
+	std::shared_ptr<CGameObject> m_Hero{};
+
 };
 
