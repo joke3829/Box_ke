@@ -99,17 +99,6 @@ void CHeroScene::Setup(void* device, void* command)
 		auto* p_RightArm = static_cast<CArmObjectDX11*>(RightArm.get());
 		auto* p_LeftArm = static_cast<CArmObjectDX11*>(LeftArm.get());
 
-		p_RightArm->SetTransformAngleAnim(360.f);
-		p_RightArm->SetTransformReadyTime(0.f);
-
-		p_RightBody->SetTransformAngleAnim(270.f);
-		p_RightBody->SetTransformReadyTime(90.f);
-
-		p_LeftBody->SetTransformAngleAnim(180.f);
-		p_LeftBody->SetTransformReadyTime(180.f);
-
-		p_LeftArm->SetTransformAngleAnim(90.f);
-		p_LeftArm->SetTransformReadyTime(270.f);
 
 
 		m_Objects.emplace_back(std::make_shared<CGameObjectDX11>(device));
@@ -160,7 +149,7 @@ void CHeroScene::KeyboardMessageProcessing(HWND hWnd, UINT message, WPARAM wPara
 			break;
 		case '2':
 			if (m_Hero) {
-				static_cast<CHeroObjectDX11*>(m_Hero.get())->SetRightRunningAnim(true);
+				//static_cast<CHeroObjectDX11*>(m_Hero.get())->SetRightRunningAnim(true);
 			}
 			break;
 		}

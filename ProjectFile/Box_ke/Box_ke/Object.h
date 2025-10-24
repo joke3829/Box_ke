@@ -10,6 +10,8 @@
 #include "stdafx.h"
 #include "Mesh.h"
 #include "Material.h"
+#include "Animation.h"
+
 
 class CGameObject {
 public:
@@ -93,6 +95,7 @@ public:
 
 	virtual void UpdateObject(float elapsedTime) {}
 	virtual void UpdateAnim(float elapsedTime) {}	// 이거 새로 만들어도 되는지 물어보기
+	CAnimation& GetAnimPlayer() { return m_Animation; }
 
 	virtual void UpdateWorldMat();
 
@@ -106,4 +109,8 @@ protected:
 	XMFLOAT4X4								m_ParentWorldMat{};
 	XMFLOAT4X4								m_HierarchyWorldMat{};
 	std::vector<std::shared_ptr<CGameObject>>	m_Childs{};
+
+protected:
+	CAnimation m_Animation;
+
 };
