@@ -66,6 +66,15 @@ protected:
 	void CreatePS(ID3D11Device* device);
 };
 
+class CTextureBleedingShaderDX11 : public CShaderDX11 {
+public:
+	CTextureBleedingShaderDX11(ID3D11Device* device);
+	void ShaderReCompile(void* device);
+protected:
+	void CreateVSAndInputLayout(ID3D11Device* device);
+	void CreatePS(ID3D11Device* device);
+};
+
 // ComputeShader
 
 class CVerticalGaussianBlurShaderDX11 : public CComputeShaderDX11 {

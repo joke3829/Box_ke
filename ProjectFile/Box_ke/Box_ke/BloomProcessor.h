@@ -18,6 +18,7 @@ protected:
 
 	std::shared_ptr<CShader>			m_TextureRenderShader{};
 	std::shared_ptr<CShader>			m_LuminanceShader{};
+	std::shared_ptr<CShader>			m_BleedingShader{};
 };
 
 class CBloomProcessorDX11 : public CBloomProcessor {
@@ -49,6 +50,17 @@ protected:
 	ComPtr<ID3D11Texture2D>					m_6x6DownSampleTexture2{};
 	ComPtr<ID3D11ShaderResourceView>		m_6x6DownSampleSRV2{};
 	ComPtr<ID3D11RenderTargetView>			m_6x6DownSampleRTV2{};
+
+	ComPtr<ID3D11Texture2D>					m_BleedingResult1{};
+	ComPtr<ID3D11ShaderResourceView>		m_BleedingSRV1{};
+	ComPtr<ID3D11RenderTargetView>			m_BleedingRTV1{};
+
+	ComPtr<ID3D11Texture2D>					m_BleedingResult2{};
+	ComPtr<ID3D11ShaderResourceView>		m_BleedingSRV2{};
+	ComPtr<ID3D11RenderTargetView>			m_BleedingRTV2{};
+
+	ComPtr<ID3D11Texture2D>					m_FinalBleedingResult{};
+	ComPtr<ID3D11RenderTargetView>			m_FinalBleedingRTV{};
 
 	XMUINT3									m_4x4DispatchFactor{};
 	XMUINT3									m_6x6DisaptchFactor1{};

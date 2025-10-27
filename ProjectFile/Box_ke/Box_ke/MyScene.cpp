@@ -380,7 +380,7 @@ void CDeferredRenderSceneDX11::BuildObjects()
 		.diffuseColor = {1.f, 1.f, 0.f, 1.f},
 		.specularColor = {1.f, 1.f, 1.f, 1.f},
 		.ambientColor = {1.f, 1.f, 0.f, 1.f},
-		.emissiveColor = {0.f, 0.f, 0.f, 0.f},
+		.emissiveColor = {1.f, 1.f, 0.f, 0.f},
 		.shininess = 32.f
 	};
 	std::shared_ptr<CMaterial> material1 = std::make_shared<CPhongShadingMaterialDX11>(m_Device.Get(), material);
