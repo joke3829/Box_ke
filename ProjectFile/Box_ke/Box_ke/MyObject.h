@@ -24,21 +24,28 @@ public:
 	
 
 public:
+	void Initialize();
 	void UpdateAnim(float elapsedTime);
 
-
-
+	shared_ptr<CAnimPlayer> GetAnimPlayer(){
+		return m_Animplayer;
+	}
+private:
+	shared_ptr<CAnimPlayer> m_Animplayer;
 
 };
+
 class CBodyObjectDX11 : public CHierarchyGameObjectDX11 {
 public:
 	CBodyObjectDX11(void* device);
 	void UpdateObject(float elapsedTime);
 
 public:
+	void Initialize();
 	void UpdateAnim(float elapsedTime);
 
-
+private:
+	shared_ptr<CAnimPlayer> m_Animplayer;
 
 
 };
@@ -50,9 +57,11 @@ public:
 	void UpdateObject(float elapsedTime);
 	
 public:
-
+	void Initialize();
 	void UpdateAnim(float elapsedTime);
 
+private: 
+	shared_ptr<CAnimPlayer> m_Animplayer;
 
 	
 };

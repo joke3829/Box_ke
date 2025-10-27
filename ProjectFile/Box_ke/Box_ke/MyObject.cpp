@@ -52,10 +52,40 @@ void CHeroObjectDX11::UpdateObject(float elapsedTime)
 		m_Childs[i]->UpdateObject(elapsedTime);
 }
 
+void CHeroObjectDX11::Initialize()
+{
+	m_Animplayer = std::make_shared<CAnimPlayer>();
+	auto RollRight_On = std::make_shared<CAnimation>();
+	RollRight_On->AddKey(0.f, { 0,0,0 }, { 0,0,0,1 }, { 1,1,1 });
+	RollRight_On->AddKey(0.2f, { 0,0,0 }, { 0,1,0,1 }, { 1,1,1 });
+	RollRight_On->AddKey(3.f, { 0,0,0 }, { 0,2,0,1 }, { 1,1,1 });
+	
+	m_Animplayer->AddAnimation("RollRight_On", RollRight_On);
+
+	auto RollRight_Off = std::make_shared<CAnimation>();
+	RollRight_Off->AddKey(0.f, { 0,0,0 }, { 0,1,0,1 }, { 1,1,1 });
+	RollRight_Off->AddKey(0.2f, { 0,0,0 }, { 0,0,0,1 }, { 1,1,1 });
+	m_Animplayer->AddAnimation("RollRight_Off", RollRight_Off);
+
+	auto RollLeft_On = std::make_shared<CAnimation>();
+	RollLeft_On->AddKey(0.f, { 0,0,0 }, { 0,0,0,1 }, { 1,1,1 });
+	RollLeft_On->AddKey(0.2f, { 0,0,0 }, { 0,-1,0,1 }, { 1,1,1 });
+	m_Animplayer->AddAnimation("RollLeft_On", RollLeft_On);
+
+	auto RollLeft_Off = std::make_shared<CAnimation>();
+	RollLeft_Off->AddKey(0.f, { 0,0,0 }, { 0,-1,0,1 }, { 1,1,1 });
+	RollLeft_Off->AddKey(0.2f, { 0,0,0 }, { 0,0,0,1 }, { 1,1,1 });
+	m_Animplayer->AddAnimation("RollLeft_Off", RollLeft_Off);
+
+}
+
 void CHeroObjectDX11::UpdateAnim(float elapsedTime)
 {
+	m_Animplayer->Update(elapsedTime);
 
+	KeyframeDesc pose = m_Animplayer->GetCurrentPose();
 
+	RotateLocalAxis(pose.RotationQuat);
 }
 
 
@@ -70,6 +100,12 @@ CBodyObjectDX11::CBodyObjectDX11(void* device) : CHierarchyGameObjectDX11(device
 {
 }
 
+void CBodyObjectDX11::Initialize()
+{
+	
+}
+
+
 void CBodyObjectDX11::UpdateObject(float elapsedTime)
 {
 	UpdateAnim(elapsedTime);
@@ -80,6 +116,7 @@ void CBodyObjectDX11::UpdateObject(float elapsedTime)
 
 void CBodyObjectDX11::UpdateAnim(float elapsedTime)
 {
+	
 
 }
 
@@ -91,6 +128,10 @@ CArmObjectDX11::CArmObjectDX11(void* device) : CHierarchyGameObjectDX11(device)
 {
 }
 
+void CArmObjectDX11::Initialize()
+{
+	
+}
 void CArmObjectDX11::UpdateObject(float elapsedTime)
 {
 	UpdateAnim(elapsedTime);

@@ -21,6 +21,7 @@ public:
 
 	virtual void UpdateAnim(float elapsedTime) {}	// 이거 새로 만들어도 되는지 물어보기
 
+
 	void SetMesh(std::shared_ptr<CMesh> mesh);
 	void SetMaterials(std::vector<std::shared_ptr<CMaterial>> material);
 
@@ -53,6 +54,8 @@ public:
 
 	void RotateLocalAxis(float right = 0.f, float up = 0.f, float look = 0.f);
 	void RotateLocalAxis(XMFLOAT3 rot = {});
+
+	void RotateLocalAxis(XMFLOAT4& quat);
 
 	void ResetWorldMat();
 
@@ -94,8 +97,9 @@ public:
 	CHierarchyGameObjectDX11(void* device);
 
 	virtual void UpdateObject(float elapsedTime) {}
-	virtual void UpdateAnim(float elapsedTime) {}	// 이거 새로 만들어도 되는지 물어보기
-	CAnimation& GetAnimPlayer() { return m_Animation; }
+	virtual void UpdateAnim(float elapsedTime) {}	// 이거 새로 만들어도 되는지 물어보기 // 이거 다 없애기 혼남 경환이한테
+
+
 
 	virtual void UpdateWorldMat();
 
@@ -110,7 +114,6 @@ protected:
 	XMFLOAT4X4								m_HierarchyWorldMat{};
 	std::vector<std::shared_ptr<CGameObject>>	m_Childs{};
 
-protected:
-	CAnimation m_Animation;
+
 
 };

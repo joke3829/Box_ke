@@ -158,7 +158,6 @@ void CGameObject::RotateLocalAxis(float right, float up, float look)
 		XMStoreFloat3(&m_UpVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_UpVec), XMMatrixRotationAxis(XMLoadFloat3(&m_LookVec), XMConvertToRadians(look)))));
 	}
 
-	m_Rotation = XMFLOAT3(atan2f(m_UpVec.y, m_UpVec.z), atan2f(m_LookVec.x, m_LookVec.z), atan2f(m_LookVec.y, m_UpVec.z));
 }
 
 void CGameObject::RotateLocalAxis(XMFLOAT3 rot)
@@ -180,6 +179,20 @@ void CGameObject::RotateLocalAxis(XMFLOAT3 rot)
 	}
 
 
+}
+
+void CGameObject::RotateLocalAxis(XMFLOAT4& quat)
+{
+	XMMATRIX rotMat = XMMatrixRotationQuaternion(XMLoadFloat4(&quat));
+
+	XMFLOAT3 right, up, look;
+	XMStoreFloat3(&right, rotMat.r[0]);
+	XMStoreFloat3(&up, rotMat.r[1]);
+	XMStoreFloat3(&look, rotMat.r[2]);
+
+	m_RightVec = right;
+	m_UpVec = up;
+	m_LookVec = look;
 }
 
 void CGameObject::ResetWorldMat()
