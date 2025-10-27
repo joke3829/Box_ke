@@ -19,7 +19,6 @@ public:
 	virtual void UpdateObject(float elapsedTime) {}
 	virtual void UpdateWorldMat();
 
-	virtual void UpdateAnim(float elapsedTime) {}	// 이거 새로 만들어도 되는지 물어보기
 
 
 	void SetMesh(std::shared_ptr<CMesh> mesh);
@@ -85,7 +84,6 @@ class CGameObjectDX11 : public CGameObject {
 public:
 	CGameObjectDX11(void* device);
 	virtual void UpdateObject(float elapsedTime) {}
-	virtual void UpdateAnim(float elapsedTime) {}	// 이거 새로 만들어도 되는지 물어보기
 
 	virtual void Render(void* command);
 protected:
@@ -97,7 +95,6 @@ public:
 	CHierarchyGameObjectDX11(void* device);
 
 	virtual void UpdateObject(float elapsedTime) {}
-	virtual void UpdateAnim(float elapsedTime) {}	// 이거 새로 만들어도 되는지 물어보기 // 이거 다 없애기 혼남 경환이한테
 
 
 

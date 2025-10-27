@@ -25,43 +25,34 @@ public:
 
 public:
 	void Initialize();
-	void UpdateAnim(float elapsedTime);
 
-	shared_ptr<CAnimPlayer> GetAnimPlayer(){
+	virtual shared_ptr<CAnimPlayer> GetAnimPlayer(){
 		return m_Animplayer;
 	}
-private:
+protected:
 	shared_ptr<CAnimPlayer> m_Animplayer;
 
 };
 
-class CBodyObjectDX11 : public CHierarchyGameObjectDX11 {
+class CBodyObjectDX11 : public CHeroObjectDX11 {
 public:
 	CBodyObjectDX11(void* device);
 	void UpdateObject(float elapsedTime);
 
 public:
 	void Initialize();
-	void UpdateAnim(float elapsedTime);
-
-private:
-	shared_ptr<CAnimPlayer> m_Animplayer;
-
 
 };
 
 
-class CArmObjectDX11 : public CHierarchyGameObjectDX11 {
+class CGunObjectDX11 : public CHeroObjectDX11 {
 public:
-	CArmObjectDX11(void* device);
+	CGunObjectDX11(void* device);
 	void UpdateObject(float elapsedTime);
 	
 public:
 	void Initialize();
-	void UpdateAnim(float elapsedTime);
 
-private: 
-	shared_ptr<CAnimPlayer> m_Animplayer;
 
 	
 };

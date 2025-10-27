@@ -11,9 +11,9 @@ void CHeroScene::Setup(void* device, void* command)
 	m_Camera->SetCameraEYE(0.f, 10.f, -30.f);
 
 	m_Viewport = { 0.f, 0.f, 1920.f, 1080.f, 0.f, 1.f };
-	// 메인 몸통, 메인 팔 2개 (왼, 오)
-	std::shared_ptr<CMesh> BodyMesh = std::make_shared<CNormalMeshDX11>(device, 5.f, 5.f, 5.f);
-	std::shared_ptr<CMesh> ArmMesh = std::make_shared<CNormalMeshDX11>(device, 1.f, 5.f, 1.f);
+	// 메인 몸통,  총 하나
+	std::shared_ptr<CMesh> BodyMesh = std::make_shared<CNormalMeshDX11>(device, 4.f, 8.f, 4.f);
+	std::shared_ptr<CMesh> GunMesh = std::make_shared<CNormalMeshDX11>(device, 1.f, 4.f, 1.f);
 	
 	std::shared_ptr<CMesh> FloorMesh = std::make_shared<CNormalMeshDX11>(device, 100.f, 100.f);
 
@@ -34,7 +34,7 @@ void CHeroScene::Setup(void* device, void* command)
 		.shininess = 32.f /2 
 	};
 
-	std::shared_ptr<CMaterial> ArmMaterial = std::make_shared<CPhongShadingMaterialDX11>(dev, material);
+	std::shared_ptr<CMaterial> GunMaterial = std::make_shared<CPhongShadingMaterialDX11>(dev, material);
 
 	material = {
 		.diffuseColor = {0.5f, 0.5f, 0.5f, 1.f},
@@ -47,7 +47,7 @@ void CHeroScene::Setup(void* device, void* command)
 	std::shared_ptr<CMaterial> FloorMaterial = std::make_shared<CPhongShadingMaterialDX11>(dev, material);
 	
 	BodyMaterial->SetStartSlot(2);
-	ArmMaterial->SetStartSlot(2);
+	GunMaterial->SetStartSlot(2);
 	FloorMaterial->SetStartSlot(2);
 
 
@@ -67,26 +67,23 @@ void CHeroScene::Setup(void* device, void* command)
 		MainBody->SetMesh(BodyMesh);
 		MainBody->GetMaterials().push_back(BodyMaterial);
 		MainBody->SetPosition(0.f, 0.f, 0.f);
+		MainBody->RotateLocalAxis(0.f, 180.f, 0.f);
 		c_Hero.push_back(MainBody);
 
-		// 왼쪽 팔
-		std::shared_ptr<CHierarchyGameObjectDX11> LeftArm = std::make_shared<CArmObjectDX11>(device);
+		// 총
+		std::shared_ptr<CHierarchyGameObjectDX11> Gun = std::make_shared<CGunObjectDX11>(device);
 
 		auto* p_MainBody = static_cast<CBodyObjectDX11*>(MainBody.get());
 		auto& c_MainBody = p_MainBody->GetChilds();
 
-		LeftArm->SetMesh(ArmMesh);
-		LeftArm->GetMaterials().push_back(ArmMaterial);
-		LeftArm->SetPosition(-3.f, 0.f, 0.f);
-		c_MainBody.push_back(LeftArm);
+		Gun->SetMesh(GunMesh);
+		Gun->GetMaterials().push_back(GunMaterial);
+		Gun->SetPosition(0.f, 0.f, 3.f);
+		Gun->RotateLocalAxis(0.f, 0.f, 45.f);
 
-		// 오른쪽 팔
-		std::shared_ptr<CHierarchyGameObjectDX11> RightArm = std::make_shared<CArmObjectDX11>(device);
+		c_MainBody.push_back(Gun);
 
-		RightArm->SetMesh(ArmMesh);
-		RightArm->GetMaterials().push_back(ArmMaterial);
-		RightArm->SetPosition(3.f, 0.f, 0.f);
-		c_MainBody.push_back(RightArm);
+	
 
 
 
