@@ -1,6 +1,7 @@
 #pragma once
 #include "Scene.h"
 #include "MyObject.h"
+#include "BloomProcessor.h"
 
 // Example
 class CTestSceneDX11 : public CScene {
@@ -95,27 +96,16 @@ protected:
 
 	std::shared_ptr<CShader>						m_MRTShader{};
 	std::shared_ptr<CShader>						m_RenderShader{};
+	std::shared_ptr<CShader>						m_TextureRenderShader{};
 
 	std::shared_ptr<CCamera>						m_Camera{};
 	std::vector<std::shared_ptr<CGameObject>>		m_Objects{};
 
-	// Bloom
-	std::shared_ptr<CShader>						m_ResultRenderShader{};
-	std::shared_ptr<CShader>						m_LuminanceShader{};
-
-	ComPtr<ID3D11Texture2D>							m_CSInput{};
-	ComPtr<ID3D11ShaderResourceView>				m_CSInSRV{};
-	ComPtr<ID3D11UnorderedAccessView>				m_CSInUAV{};
-
-	ComPtr<ID3D11Texture2D>							m_CSOutput{};
-	ComPtr<ID3D11ShaderResourceView>				m_CSOutSRV{};
-	ComPtr<ID3D11UnorderedAccessView>				m_CSOutUAV{};
-
-	ComPtr<ID3D11RenderTargetView>					m_OutputRTV{};
+	ComPtr<ID3D11Texture2D>							m_OutputTexture{};
 	ComPtr<ID3D11ShaderResourceView>				m_OutputSRV{};
-	ComPtr<ID3D11Texture2D>							m_OutputBuffer{};
-
-	XMUINT3											m_DispatchRange{};
+	ComPtr<ID3D11RenderTargetView>					m_OutputRTV{};
+	// Bloom
+	std::shared_ptr<CBloomProcessor>				m_BloomProcessor{};
 
 	D3D11_VIEWPORT									m_Viewport{};
 	POINT							oldCursor{};

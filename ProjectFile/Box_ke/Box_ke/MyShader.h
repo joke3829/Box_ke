@@ -48,21 +48,36 @@ protected:
 	void CreatePS(ID3D11Device* device);
 };
 
-class CResultRenderShaderDX11 : public CShaderDX11 {
+class CFullScreenTextrueRenderShaderDX11 : public CShaderDX11 {
 public:
-	CResultRenderShaderDX11(ID3D11Device* device);
+	CFullScreenTextrueRenderShaderDX11(ID3D11Device* device);
 	void ShaderReCompile(void* device);
 protected:
-	void CreateDepthStencilState(ID3D11Device* device);
+	void CreateVSAndInputLayout(ID3D11Device* device);
+	void CreatePS(ID3D11Device* device);
+};
+
+class CLuminanceShaderDX11 : public CShaderDX11 {
+public:
+	CLuminanceShaderDX11(ID3D11Device* device);
+	void ShaderReCompile(void* device);
+protected:
 	void CreateVSAndInputLayout(ID3D11Device* device);
 	void CreatePS(ID3D11Device* device);
 };
 
 // ComputeShader
 
-class CLuminanceComputeShaderDX11 : public CComputeShaderDX11 {
+class CVerticalGaussianBlurShaderDX11 : public CComputeShaderDX11 {
 public:
-	CLuminanceComputeShaderDX11(ID3D11Device* device);
+	CVerticalGaussianBlurShaderDX11(ID3D11Device* device);
+protected:
+	void CreateCS(ID3D11Device* device);
+};
+
+class CHorizonGaussianBlurShaderDX11 : public CComputeShaderDX11 {
+public:
+	CHorizonGaussianBlurShaderDX11(ID3D11Device* device);
 protected:
 	void CreateCS(ID3D11Device* device);
 };

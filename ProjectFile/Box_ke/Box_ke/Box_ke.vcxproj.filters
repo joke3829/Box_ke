@@ -55,6 +55,15 @@
     <Filter Include="소스 파일\Resource\Material">
       <UniqueIdentifier>{af392998-b75a-42e8-bf20-3066c5ca42ff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\PostProcess">
+      <UniqueIdentifier>{b650b7b9-a4c5-4f60-9b86-03c60836208d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\PostProcess\Bloom">
+      <UniqueIdentifier>{66c73ca1-ac50-41a7-941c-a3f712e12695}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\PostProcess\Blur">
+      <UniqueIdentifier>{d74ca7b3-6da6-49bf-89eb-c676147ae60e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -102,6 +111,12 @@
     <ClInclude Include="Material.h">
       <Filter>소스 파일\Resource\Material</Filter>
     </ClInclude>
+    <ClInclude Include="BloomProcessor.h">
+      <Filter>소스 파일\PostProcess\Bloom</Filter>
+    </ClInclude>
+    <ClInclude Include="BlurProcessor.h">
+      <Filter>소스 파일\PostProcess\Blur</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Box_ke.cpp">
@@ -143,6 +158,15 @@
     <ClCompile Include="Material.cpp">
       <Filter>소스 파일\Resource\Material</Filter>
     </ClCompile>
+    <ClCompile Include="BloomProcessor.cpp">
+      <Filter>소스 파일\PostProcess\Bloom</Filter>
+    </ClCompile>
+    <ClCompile Include="BlurPorcessor.cpp">
+      <Filter>소스 파일\PostProcess\Blur</Filter>
+    </ClCompile>
+    <ClCompile Include="BlurProcessor.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Box_ke.rc">
@@ -170,7 +194,10 @@
     <None Include="Shaders\DeferredRenderingShader.hlsl">
       <Filter>소스 파일\Shader\ShaderFile</Filter>
     </None>
-    <None Include="Shaders\BloomComputeShader.hlsl">
+    <None Include="Shaders\TextureRenderShader.hlsl">
+      <Filter>소스 파일\Shader\ShaderFile</Filter>
+    </None>
+    <None Include="Shaders\GaussianBlurShader.hlsl">
       <Filter>소스 파일\Shader\ShaderFile</Filter>
     </None>
   </ItemGroup>

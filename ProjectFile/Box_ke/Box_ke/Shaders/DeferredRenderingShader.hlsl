@@ -148,9 +148,3 @@ float4 DeferredRenderTwoPathPS(DT_PS_INPUT input) : SV_Target
     
     return float4(BlinnPhongLightingResult(wPos, wNormal, cameraEye, tempColor, g_Light), 1.f);
 }
-
-
-float4 ResultRenderPS(DT_PS_INPUT input) : SV_Target
-{
-    return g_MRT[0].Sample(g_Sample, input.uv);
-}

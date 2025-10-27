@@ -127,6 +127,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BloomProcessor.h" />
+    <ClInclude Include="BlurProcessor.h" />
     <ClInclude Include="Box_ke.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="GameFramework.h" />
@@ -144,6 +146,9 @@
     <ClInclude Include="Timer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BloomProcessor.cpp" />
+    <ClCompile Include="BlurPorcessor.cpp" />
+    <ClCompile Include="BlurProcessor.cpp" />
     <ClCompile Include="Box_ke.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="GameFramework.cpp" />
@@ -184,7 +189,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\BloomComputeShader.hlsl">
+    <None Include="Shaders\TextureRenderShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\GaussianBlurShader.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

@@ -353,26 +353,19 @@ void CDeferredRenderSceneDX11::CreateTargets()
 		m_SRVs.push_back(srv);
 	}
 
-	// Bloom Resource
+
+	// OutputTexture
 	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	m_Device->CreateTexture2D(&desc, nullptr, m_OutputBuffer.GetAddressOf());
-	m_Device->CreateRenderTargetView(m_OutputBuffer.Get(), nullptr, m_OutputRTV.GetAddressOf());
-	m_Device->CreateShaderResourceView(m_OutputBuffer.Get(), nullptr, m_OutputSRV.GetAddressOf());
-	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
-	m_Device->CreateTexture2D(&desc, nullptr, m_CSInput.GetAddressOf());
-	m_Device->CreateShaderResourceView(m_CSInput.Get(), nullptr, m_CSInSRV.GetAddressOf());
-	m_Device->CreateUnorderedAccessView(m_CSInput.Get(), nullptr, m_CSInUAV.GetAddressOf());
-
-	m_Device->CreateTexture2D(&desc, nullptr, m_CSOutput.GetAddressOf());
-	m_Device->CreateShaderResourceView(m_CSOutput.Get(), nullptr, m_CSOutSRV.GetAddressOf());
-	m_Device->CreateUnorderedAccessView(m_CSOutput.Get(), nullptr, m_CSOutUAV.GetAddressOf());
-
+	m_Device->CreateTexture2D(&desc, nullptr, m_OutputTexture.GetAddressOf());
+	m_Device->CreateShaderResourceView(m_OutputTexture.Get(), nullptr, m_OutputSRV.GetAddressOf());
+	m_Device->CreateRenderTargetView(m_OutputTexture.Get(), nullptr, m_OutputRTV.GetAddressOf());
 }
 
 void CDeferredRenderSceneDX11::BuildObjects()
 {
 	m_MRTShader = std::make_shared<CDeferredRenderingOnePathShaderDX11>(m_Device.Get());
 	m_RenderShader = std::make_shared<CDeferredRenderingTwoPathShaderDX11>(m_Device.Get());
+	m_TextureRenderShader = std::make_shared<CFullScreenTextrueRenderShaderDX11>(m_Device.Get());
 
 	m_Camera = std::make_unique<CCameraDX11>(m_Device.Get(), 60.f, 16.f / 9.f, 0.01f, 500.f);
 	m_Camera->SetStartSlot(1);
@@ -384,9 +377,9 @@ void CDeferredRenderSceneDX11::BuildObjects()
 	std::shared_ptr<CMesh> mesh1 = std::make_shared<CNormalMeshDX11>(m_Device.Get(), 2.5f, 32U);
 	std::shared_ptr<CMesh> mesh2 = std::make_shared<CNormalMeshDX11>(m_Device.Get(), 100.f, 100.f);
 	PhongMaterialCbuffer material = {
-		.diffuseColor = {1.f, 0.f, 0.f, 1.f},
+		.diffuseColor = {1.f, 1.f, 0.f, 1.f},
 		.specularColor = {1.f, 1.f, 1.f, 1.f},
-		.ambientColor = {1.f, 0.f, 0.f, 1.f},
+		.ambientColor = {1.f, 1.f, 0.f, 1.f},
 		.emissiveColor = {0.f, 0.f, 0.f, 0.f},
 		.shininess = 32.f
 	};
@@ -437,10 +430,7 @@ void CDeferredRenderSceneDX11::BuildObjects()
 		m_Objects.back()->SetPosition(0.f, -20.f, 0.f);
 	}
 
-	// Bloom Shader
-	m_ResultRenderShader = std::make_shared<CResultRenderShaderDX11>(m_Device.Get());
-	m_LuminanceShader = std::make_shared<CLuminanceComputeShaderDX11>(m_Device.Get());
-	m_DispatchRange = { m_ClientWidth / 32 + 1, m_ClientHeight / 32 + 1, 1 };
+	m_BloomProcessor = std::make_shared<CBloomProcessorDX11>(m_ClientWidth, m_ClientHeight, m_Device.Get(), m_TextureRenderShader);
 }
 
 void CDeferredRenderSceneDX11::ProcessInput(float elapsedTime)
@@ -484,7 +474,6 @@ void CDeferredRenderSceneDX11::KeyboardMessageProcessing(HWND hWnd, UINT message
 			m_RenderShader->ShaderReCompile(m_Device.Get());
 			break;
 		case '3':
-			m_LuminanceShader->ShaderReCompile(m_Device.Get());
 			break;
 		case 'B':
 			m_OnBloom = !m_OnBloom;
@@ -558,19 +547,12 @@ void CDeferredRenderSceneDX11::PostRender(void* command)
 {
 	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
 	if (m_OnBloom) {
-		context->CopyResource(m_CSInput.Get(), m_OutputBuffer.Get());
-
-		m_LuminanceShader->SetShader(context);
-		context->CSSetShaderResources(0, 1, m_CSInSRV.GetAddressOf());
-		context->CSSetUnorderedAccessViews(0, 1, m_CSOutUAV.GetAddressOf(), nullptr);
-
-		context->Dispatch(m_DispatchRange.x, m_DispatchRange.y, m_DispatchRange.z);
-
-		context->CopyResource(m_OutputBuffer.Get(), m_CSOutput.Get());
+		m_BloomProcessor->Process(context, m_OutputTexture.Get(), m_OutputTexture.Get());
 	}
-	m_ResultRenderShader->SetShader(context);
 
-	context->OMSetRenderTargets(1, m_MainRTV.GetAddressOf(), m_MainDSV.Get());
+	m_TextureRenderShader->SetShader(command);
+	context->OMSetRenderTargets(1, m_MainRTV.GetAddressOf(), nullptr);
+	context->RSSetViewports(1, &m_Viewport);
 	context->PSSetShaderResources(0, 1, m_OutputSRV.GetAddressOf());
 
 	context->DrawInstanced(6, 1, 0, 0);
@@ -588,7 +570,7 @@ void CDeferredRenderSceneDX11::TwoPathRender(ID3D11DeviceContext* context)
 {
 	m_RenderShader->SetShader(context);
 
-	context->OMSetRenderTargets(1, m_OutputRTV.GetAddressOf(), m_MainDSV.Get());
+	context->OMSetRenderTargets(1, m_OutputRTV.GetAddressOf(), nullptr);
 	ID3D11ShaderResourceView* views[4] = {
 		m_SRVs[0].Get(), m_SRVs[1].Get(), m_SRVs[2].Get(), m_SRVs[3].Get()
 	};

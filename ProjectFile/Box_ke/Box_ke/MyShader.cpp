@@ -257,21 +257,13 @@ void CDeferredRenderingTwoPathShaderDX11::CreatePS(ID3D11Device* device)
 	m_Samplers.push_back(sampler.Get());
 }
 
-CResultRenderShaderDX11::CResultRenderShaderDX11(ID3D11Device* device)
+CFullScreenTextrueRenderShaderDX11::CFullScreenTextrueRenderShaderDX11(ID3D11Device* device)
 {
-	CreateDepthStencilState(device);
 	CreateVSAndInputLayout(device);
 	CreatePS(device);
 }
 
-void CResultRenderShaderDX11::CreateDepthStencilState(ID3D11Device* device)
-{
-	D3D11_DEPTH_STENCIL_DESC desc{};
-	desc.DepthEnable = FALSE;
-	device->CreateDepthStencilState(&desc, m_DepthStencilState.GetAddressOf());
-}
-
-void CResultRenderShaderDX11::ShaderReCompile(void* device)
+void CFullScreenTextrueRenderShaderDX11::ShaderReCompile(void* device)
 {
 	ID3D11Device* td = reinterpret_cast<ID3D11Device*>(device);
 
@@ -282,9 +274,9 @@ void CResultRenderShaderDX11::ShaderReCompile(void* device)
 	CreatePS(td);
 }
 
-void CResultRenderShaderDX11::CreateVSAndInputLayout(ID3D11Device* device)
+void CFullScreenTextrueRenderShaderDX11::CreateVSAndInputLayout(ID3D11Device* device)
 {
-	ComPtr<ID3DBlob> pBlob = CompileHLSL(L"Shaders\\DeferredRenderingShader.hlsl", "DeferredRenderTwoPathVS", "vs_5_0");
+	ComPtr<ID3DBlob> pBlob = CompileHLSL(L"Shaders\\TextureRenderShader.hlsl", "TextureRenderVS", "vs_5_0");
 	HRESULT hResult = device->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, m_VS.GetAddressOf());
 
 	if (FAILED(hResult)) {
@@ -293,9 +285,65 @@ void CResultRenderShaderDX11::CreateVSAndInputLayout(ID3D11Device* device)
 	}
 }
 
-void CResultRenderShaderDX11::CreatePS(ID3D11Device* device)
+void CFullScreenTextrueRenderShaderDX11::CreatePS(ID3D11Device* device)
 {
-	ComPtr<ID3DBlob> pBlob = CompileHLSL(L"Shaders\\DeferredRenderingShader.hlsl", "ResultRenderPS", "ps_5_0");
+	ComPtr<ID3DBlob> pBlob = CompileHLSL(L"Shaders\\TextureRenderShader.hlsl", "TextureRenderPS", "ps_5_0");
+	HRESULT hResult = device->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, m_PS.GetAddressOf());
+
+	if (FAILED(hResult)) {
+		MessageBoxA(0, "Failed CreatePixelShader()", "Fatal Error", MB_OK);
+		PostQuitMessage(0);
+	}
+
+	ComPtr<ID3D11SamplerState> sampler{};
+
+	D3D11_SAMPLER_DESC desc{};
+	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+
+	hResult = device->CreateSamplerState(&desc, sampler.GetAddressOf());
+	if (FAILED(hResult)) {
+		MessageBoxA(0, "Failed CreateSamplerState()", "Fatal Error", MB_OK);
+		PostQuitMessage(0);
+	}
+
+	m_SamplerStates.push_back(sampler);
+	m_Samplers.push_back(sampler.Get());
+}
+
+CLuminanceShaderDX11::CLuminanceShaderDX11(ID3D11Device* device)
+{
+	CreateVSAndInputLayout(device);
+	CreatePS(device);
+}
+
+void CLuminanceShaderDX11::ShaderReCompile(void* device)
+{
+	ID3D11Device* td = reinterpret_cast<ID3D11Device*>(device);
+
+	m_SamplerStates.clear();
+	m_Samplers.clear();
+
+	CreateVSAndInputLayout(td);
+	CreatePS(td);
+}
+
+void CLuminanceShaderDX11::CreateVSAndInputLayout(ID3D11Device* device)
+{
+	ComPtr<ID3DBlob> pBlob = CompileHLSL(L"Shaders\\TextureRenderShader.hlsl", "TextureRenderVS", "vs_5_0");
+	HRESULT hResult = device->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, m_VS.GetAddressOf());
+
+	if (FAILED(hResult)) {
+		MessageBoxA(0, "Failed CreateVertexShader()", "Fatal Error", MB_OK);
+		PostQuitMessage(0);
+	}
+}
+
+void CLuminanceShaderDX11::CreatePS(ID3D11Device* device)
+{
+	ComPtr<ID3DBlob> pBlob = CompileHLSL(L"Shaders\\TextureRenderShader.hlsl", "LuminancePS", "ps_5_0");
 	HRESULT hResult = device->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, m_PS.GetAddressOf());
 
 	if (FAILED(hResult)) {
@@ -323,17 +371,17 @@ void CResultRenderShaderDX11::CreatePS(ID3D11Device* device)
 
 // ComputeShader
 
-CLuminanceComputeShaderDX11::CLuminanceComputeShaderDX11(ID3D11Device* device)
+CVerticalGaussianBlurShaderDX11::CVerticalGaussianBlurShaderDX11(ID3D11Device* device)
 {
 	CreateCS(device);
 }
 
 
-void CLuminanceComputeShaderDX11::CreateCS(ID3D11Device* device)
+void CVerticalGaussianBlurShaderDX11::CreateCS(ID3D11Device* device)
 {
-	ComPtr<ID3DBlob> pBlob = CompileHLSL(L"Shaders\\BloomComputeShader.hlsl", "TransGreyScale", "cs_5_0");
+	ComPtr<ID3DBlob> pBlob = CompileHLSL(L"Shaders\\GaussianBlurShader.hlsl", "VerticalGaussianBlur", "cs_5_0");
 	HRESULT hResult = device->CreateComputeShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, m_CS.GetAddressOf());
-	
+
 	if (FAILED(hResult)) {
 		MessageBoxA(0, "Failed CreateComputeShader()", "Fatal Error", MB_OK);
 		PostQuitMessage(0);
@@ -341,3 +389,19 @@ void CLuminanceComputeShaderDX11::CreateCS(ID3D11Device* device)
 }
 
 
+CHorizonGaussianBlurShaderDX11::CHorizonGaussianBlurShaderDX11(ID3D11Device* device)
+{
+	CreateCS(device);
+}
+
+
+void CHorizonGaussianBlurShaderDX11::CreateCS(ID3D11Device* device)
+{
+	ComPtr<ID3DBlob> pBlob = CompileHLSL(L"Shaders\\GaussianBlurShader.hlsl", "HorizonGaussianBlur", "cs_5_0");
+	HRESULT hResult = device->CreateComputeShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, m_CS.GetAddressOf());
+
+	if (FAILED(hResult)) {
+		MessageBoxA(0, "Failed CreateComputeShader()", "Fatal Error", MB_OK);
+		PostQuitMessage(0);
+	}
+}
