@@ -39,6 +39,7 @@ float CalculateBlinnPhongSpecular(in float3 wNormal, in float3 L, in float3 V, i
 
 float3 PhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye, in PhongMaterial material, in Light light)
 {
+    float3 lightColor = light.lightColor * light.intensity;
     float3 retColor = float3(0.f, 0.f, 0.f);
     float3 L;
     
@@ -54,15 +55,16 @@ float3 PhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye, in 
         float Specularfactor = CalculatePhongSpecular(wNormal, L, V, material.shininess);
         
         retColor =
-        (diffusefactor * material.diffuseColor.rgb * light.lightColor.rgb) +
-        (Specularfactor * material.specularColor.rgb * light.lightColor.rgb);
+        (diffusefactor * material.diffuseColor.rgb * lightColor) +
+        (Specularfactor * material.specularColor.rgb * lightColor);
 
-    return clamp(retColor + 0.2f * material.ambientColor.rgb + material.emissiveColor.rgb, float3(0.f, 0.f, 0.f), float3(1.f, 1.f, 1.f));
+    return retColor + 0.2f * material.ambientColor.rgb + material.emissiveColor.rgb;
 }
 
 float3 BlinnPhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye, in PhongMaterial material, in Light light)
 {
-    float3 retColor = float3(0.f, 0.f, 0.f);
+    float3 lightColor = light.lightColor * light.intensity;
+    float3 retColor = 0.2f * material.ambientColor.rgb + 8.f * material.emissiveColor.rgb;
     float3 L;
     
     if (light.type == LIGHT_TYPE_DIRECTIONAL)
@@ -71,13 +73,16 @@ float3 BlinnPhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye
         L = light.position - wPos;
     L = normalize(L);
     
-    float diffusefactor = max(dot(wNormal, L), 0.f);
-    float3 V = normalize(eye - wPos);
-    float Specularfactor = CalculateBlinnPhongSpecular(wNormal, L, V, material.shininess);
+    if (dot(material.emissiveColor.rgb, float3(1.f, 1.f, 1.f)) == 0.f)
+    {
+        float diffusefactor = max(dot(wNormal, L), 0.f);
+        float3 V = normalize(eye - wPos);
+        float Specularfactor = CalculateBlinnPhongSpecular(wNormal, L, V, material.shininess);
         
-    retColor =
-    (diffusefactor * material.diffuseColor.rgb * light.lightColor.rgb) +
-    (Specularfactor * material.specularColor.rgb * light.lightColor.rgb);
-    //return retColor + 0.2f * material.ambientColor.rgb + material.emissiveColor.rgb;
-    return clamp(retColor + 0.2f * material.ambientColor.rgb + material.emissiveColor.rgb, float3(0.f, 0.f, 0.f), float3(1.f, 1.f, 1.f));
+        retColor = retColor +
+    (diffusefactor * material.diffuseColor.rgb * lightColor) +
+    (Specularfactor * material.specularColor.rgb * lightColor);
+    }
+    return retColor;
+    //return clamp(retColor + 0.2f * material.ambientColor.rgb + material.emissiveColor.rgb, float3(0.f, 0.f, 0.f), float3(1.f, 1.f, 1.f));
 }

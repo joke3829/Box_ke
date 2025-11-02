@@ -29,7 +29,7 @@ void CGaussianBlurProcessorDX11::CreateBuffer(ID3D11Device* device)
 	desc.Width = m_Width;
 	desc.Height = m_Height;
 	desc.ArraySize = 1;
-	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 	desc.SampleDesc.Count = 1;
 	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
 	device->CreateTexture2D(&desc, nullptr, m_CSInput.GetAddressOf());

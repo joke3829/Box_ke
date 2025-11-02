@@ -34,6 +34,7 @@ protected:
 	std::shared_ptr<CGaussianBlurProcessor>		m_BlurProcessor6x6_1{};
 	std::shared_ptr<CGaussianBlurProcessor>		m_BlurProcessor6x6_2{};
 	std::shared_ptr<CGaussianBlurProcessor>		m_BlurProcessor4x4{};
+	std::shared_ptr<CGaussianBlurProcessor>		m_BlurProcessorOrigin{};
 
 	ComPtr<ID3D11Texture2D>					m_OriginTexture{};
 	ComPtr<ID3D11ShaderResourceView>		m_OriginSRV{};
@@ -61,6 +62,10 @@ protected:
 
 	ComPtr<ID3D11Texture2D>					m_FinalBleedingResult{};
 	ComPtr<ID3D11RenderTargetView>			m_FinalBleedingRTV{};
+
+	ComPtr<ID3D11Texture2D>					m_OriginSize2D{};
+	ComPtr<ID3D11ShaderResourceView>		m_OriginSizeSRV{};
+	ComPtr<ID3D11RenderTargetView>			m_OriginSizeRTV{};
 
 	XMUINT3									m_4x4DispatchFactor{};
 	XMUINT3									m_6x6DisaptchFactor1{};

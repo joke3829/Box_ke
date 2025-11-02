@@ -55,7 +55,7 @@ float4 LuminancePS(VS_OUTPUT input) : SV_Target
     float3 color = g_RenderTexture.Sample(g_Sampler, input.uv).rgb;
     
     float luminance = dot(color, float3(0.2126, 0.7152, 0.0722));
-    if(luminance > 0.4)
+    if(luminance > 5.0)
         return float4(color, 1.f);
     else
         return float4(0.f, 0.f, 0.f, 1.f);
@@ -69,4 +69,15 @@ float4 BleedingPS(VS_OUTPUT input) : SV_Target
     float3 color2 = g_AdditionalTexture.Sample(g_Sampler, input.uv).rgb;
     
     return float4(color1 + color2, 1.f);
+}
+
+float4 TextureToneMapping(VS_OUTPUT input) : SV_Target
+{
+    float3 color = g_RenderTexture.Sample(g_Sampler, input.uv).rgb;
+    color = max(0.f, color);
+    color = color / (color + 1.0f); // Reinhard Curve
+    
+    color = pow(color, 1.f / 2.2f);
+
+    return float4(color, 1.f);
 }

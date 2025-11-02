@@ -97,6 +97,7 @@ protected:
 	std::shared_ptr<CShader>						m_MRTShader{};
 	std::shared_ptr<CShader>						m_RenderShader{};
 	std::shared_ptr<CShader>						m_TextureRenderShader{};
+	std::shared_ptr<CShader>						m_ToneMappingShader{};
 
 	std::shared_ptr<CCamera>						m_Camera{};
 	std::vector<std::shared_ptr<CGameObject>>		m_Objects{};

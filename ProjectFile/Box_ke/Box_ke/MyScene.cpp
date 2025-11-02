@@ -322,7 +322,7 @@ void CDeferredRenderSceneDX11::CreateTargets()
 	desc.Width = m_ClientWidth;
 	desc.Height = m_ClientHeight;
 	desc.ArraySize = 1;
-	desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 	desc.SampleDesc.Count = 1;
 	desc.Usage = D3D11_USAGE_DEFAULT;
 	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
@@ -355,7 +355,6 @@ void CDeferredRenderSceneDX11::CreateTargets()
 
 
 	// OutputTexture
-	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	m_Device->CreateTexture2D(&desc, nullptr, m_OutputTexture.GetAddressOf());
 	m_Device->CreateShaderResourceView(m_OutputTexture.Get(), nullptr, m_OutputSRV.GetAddressOf());
 	m_Device->CreateRenderTargetView(m_OutputTexture.Get(), nullptr, m_OutputRTV.GetAddressOf());
@@ -366,6 +365,7 @@ void CDeferredRenderSceneDX11::BuildObjects()
 	m_MRTShader = std::make_shared<CDeferredRenderingOnePathShaderDX11>(m_Device.Get());
 	m_RenderShader = std::make_shared<CDeferredRenderingTwoPathShaderDX11>(m_Device.Get());
 	m_TextureRenderShader = std::make_shared<CFullScreenTextrueRenderShaderDX11>(m_Device.Get());
+	m_ToneMappingShader = std::make_shared<CTextureToneMappingShaderDX11>(m_Device.Get());
 
 	m_Camera = std::make_unique<CCameraDX11>(m_Device.Get(), 60.f, 16.f / 9.f, 0.01f, 500.f);
 	m_Camera->SetStartSlot(1);
@@ -385,9 +385,9 @@ void CDeferredRenderSceneDX11::BuildObjects()
 	};
 	std::shared_ptr<CMaterial> material1 = std::make_shared<CPhongShadingMaterialDX11>(m_Device.Get(), material);
 	material = {
-		.diffuseColor = {0.5f, 0.5f, 0.5f, 1.f},
-		.specularColor = {1.f, 1.f, 1.f, 1.f},
-		.ambientColor = {0.5f, 0.5f, 0.5f, 1.f},
+		.diffuseColor = {0.3f, 1.0f, 0.1f, 1.f},
+		.specularColor = {0.f, 0.f, 0.f, 1.f},
+		.ambientColor = {0.3f, 1.0f, 0.1f, 1.f},
 		.emissiveColor = {0.f, 0.f, 0.f, 0.f},
 		.shininess = 128.f
 	};
@@ -515,8 +515,8 @@ void CDeferredRenderSceneDX11::MouseMessageProcessing(HWND hWnd, UINT message, W
 
 void CDeferredRenderSceneDX11::UpdateObject(float elapsedTime, void* command)
 {
-	/*for (std::shared_ptr<CGameObject>& object : m_Objects)
-		object->UpdateObject(elapsedTime);*/
+	for (std::shared_ptr<CGameObject>& object : m_Objects)
+		object->UpdateObject(elapsedTime);
 }
 
 void CDeferredRenderSceneDX11::PreRender(void* command)
@@ -547,10 +547,10 @@ void CDeferredRenderSceneDX11::PostRender(void* command)
 {
 	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
 	if (m_OnBloom) {
-		m_BloomProcessor->Process(context, m_OutputTexture.Get(), m_OutputTexture.Get());
+		m_BloomProcessor->Process(context, m_OutputTexture.Get());
 	}
 
-	m_TextureRenderShader->SetShader(command);
+	m_ToneMappingShader->SetShader(command);
 	context->OMSetRenderTargets(1, m_MainRTV.GetAddressOf(), nullptr);
 	context->RSSetViewports(1, &m_Viewport);
 	context->PSSetShaderResources(0, 1, m_OutputSRV.GetAddressOf());

@@ -32,14 +32,14 @@ CBloomProcessorDX11::CBloomProcessorDX11(UINT width, UINT height, ID3D11Device* 
 void CBloomProcessorDX11::CreateBuffers(ID3D11Device* device)
 {
 	XMUINT2 size4x4 = { m_clientWidth / 4, m_clientHeight / 4 };
-	XMUINT2 size6x6_1 = { size4x4.x / 6, size4x4.y / 6 };
-	XMUINT2 size6x6_2 = { size6x6_1.x / 6, size6x6_1.y / 6 };
+	XMUINT2 size6x6_1 = { size4x4.x / 2, size4x4.y / 2 };
+	XMUINT2 size6x6_2 = { size6x6_1.x / 2, size6x6_1.y / 2 };
 	
 	D3D11_TEXTURE2D_DESC desc{};
 	desc.Width = m_clientWidth;
 	desc.Height = m_clientHeight;
 	desc.ArraySize = 1;
-	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 	desc.SampleDesc.Count = 1;
 	desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
 	device->CreateTexture2D(&desc, nullptr, m_OriginTexture.GetAddressOf());
@@ -48,6 +48,10 @@ void CBloomProcessorDX11::CreateBuffers(ID3D11Device* device)
 	
 	device->CreateTexture2D(&desc, nullptr, m_FinalBleedingResult.GetAddressOf());
 	device->CreateRenderTargetView(m_FinalBleedingResult.Get(), nullptr, m_FinalBleedingRTV.GetAddressOf());
+
+	device->CreateTexture2D(&desc, nullptr, m_OriginSize2D.GetAddressOf());
+	device->CreateShaderResourceView(m_OriginSize2D.Get(), nullptr, m_OriginSizeSRV.GetAddressOf());
+	device->CreateRenderTargetView(m_OriginSize2D.Get(), nullptr, m_OriginSizeRTV.GetAddressOf());
 
 	desc.Width = size4x4.x;
 	desc.Height = size4x4.y;
@@ -88,12 +92,13 @@ void CBloomProcessorDX11::CreateBlurProcessor(ID3D11Device* device)
 	std::shared_ptr<CShader> hor = std::make_shared<CHorizonGaussianBlurShaderDX11>(device);
 
 	XMUINT2 size4x4 = { m_clientWidth / 4, m_clientHeight / 4 };
-	XMUINT2 size6x6_1 = { size4x4.x / 6, size4x4.y / 6 };
-	XMUINT2 size6x6_2 = { size6x6_1.x / 6, size6x6_1.y / 6 };
+	XMUINT2 size6x6_1 = { size4x4.x / 2, size4x4.y / 2 };
+	XMUINT2 size6x6_2 = { size6x6_1.x / 2, size6x6_1.y / 2 };
 
 	m_BlurProcessor6x6_1 = std::make_shared<CGaussianBlurProcessorDX11>(size6x6_2.x, size6x6_2.y, device, ver, hor);
 	m_BlurProcessor6x6_2 = std::make_shared<CGaussianBlurProcessorDX11>(size6x6_1.x, size6x6_1.y, device, ver, hor);
 	m_BlurProcessor4x4 = std::make_shared<CGaussianBlurProcessorDX11>(size4x4.x, size4x4.y, device, ver, hor);
+	m_BlurProcessorOrigin = std::make_shared<CGaussianBlurProcessorDX11>(m_clientWidth, m_clientHeight, device, ver, hor);
 }
 
 void CBloomProcessorDX11::Process(void* command, void* in_texture, void* out_texture)
@@ -130,7 +135,7 @@ void CBloomProcessorDX11::Process(void* command, void* in_texture, void* out_tex
 	context->DrawInstanced(6, 1, 0, 0);
 
 	// Blur(6x6_2)
-	m_BlurProcessor6x6_1->Process(1, context, m_6x6DownSampleTexture2.Get());
+	m_BlurProcessor6x6_1->Process(2, context, m_6x6DownSampleTexture2.Get());
 
 	// Blur(6x6_1 + Blur(6x6_2))
 	m_BleedingShader->SetShader(context);
@@ -139,7 +144,7 @@ void CBloomProcessorDX11::Process(void* command, void* in_texture, void* out_tex
 	ID3D11ShaderResourceView* temp[] = { m_6x6DownSampleSRV1.Get(), m_6x6DownSampleSRV2.Get() };
 	context->PSSetShaderResources(0, 2, temp);
 	context->DrawInstanced(6, 1, 0, 0);
-	m_BlurProcessor6x6_2->Process(1, context, m_BleedingResult1.Get());
+	m_BlurProcessor6x6_2->Process(2, context, m_BleedingResult1.Get());
 
 	// Blur(4x4 + Blur(6x6_1 + Blur(6x6_2)))
 	context->OMSetRenderTargets(1, m_BleedingRTV2.GetAddressOf(), nullptr);
@@ -147,12 +152,18 @@ void CBloomProcessorDX11::Process(void* command, void* in_texture, void* out_tex
 	temp[0] = m_4x4DownSampleSRV.Get(), temp[1] = m_BleedingSRV1.Get();
 	context->PSSetShaderResources(0, 2, temp);
 	context->DrawInstanced(6, 1, 0, 0);
-	m_BlurProcessor6x6_2->Process(1, context, m_BleedingResult2.Get());
+	m_BlurProcessor6x6_2->Process(2, context, m_BleedingResult2.Get());
 
 	// 원복
-	//m_TextureRenderShader->SetShader(context);
-	context->OMSetRenderTargets(1, m_FinalBleedingRTV.GetAddressOf(), nullptr);
+	m_TextureRenderShader->SetShader(context);
+	context->OMSetRenderTargets(1, m_OriginSizeRTV.GetAddressOf(), nullptr);
 	context->RSSetViewports(1, &m_ViewPort[0]);
+	context->PSSetShaderResources(0, 1, m_BleedingSRV2.GetAddressOf());
+	context->DrawInstanced(6, 1, 0, 0);
+	m_BlurProcessorOrigin->Process(2, context, m_OriginSize2D.Get());
+
+	m_BleedingShader->SetShader(context);
+	context->OMSetRenderTargets(1, m_FinalBleedingRTV.GetAddressOf(), nullptr);
 	temp[0] = m_OriginSRV.Get(), temp[1] = m_BleedingSRV2.Get();
 	context->PSSetShaderResources(0, 2, temp);
 	context->DrawInstanced(6, 1, 0, 0);
