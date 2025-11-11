@@ -64,6 +64,12 @@
     <Filter Include="소스 파일\PostProcess\Blur">
       <UniqueIdentifier>{d74ca7b3-6da6-49bf-89eb-c676147ae60e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Resource\Light">
+      <UniqueIdentifier>{ed1f9b8b-eac7-4428-82af-24911313b692}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Resource\Light\LightManager">
+      <UniqueIdentifier>{00ad8117-919b-4c12-8f8a-3622ac5fd6a0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -117,6 +123,12 @@
     <ClInclude Include="BlurProcessor.h">
       <Filter>소스 파일\PostProcess\Blur</Filter>
     </ClInclude>
+    <ClInclude Include="LightManager.h">
+      <Filter>소스 파일\Resource\Light\LightManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Light.h">
+      <Filter>소스 파일\Resource\Light</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Box_ke.cpp">
@@ -166,6 +178,12 @@
     </ClCompile>
     <ClCompile Include="BlurProcessor.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="LightManager.cpp">
+      <Filter>소스 파일\Resource\Light\LightManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Light.cpp">
+      <Filter>소스 파일\Resource\Light</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

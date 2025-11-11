@@ -1,4 +1,5 @@
 #include "Lighting.hlsl"
+#define MAX_LIGHTS 100
 
 cbuffer ObjectCBuffer : register(b0)
 {
@@ -17,6 +18,11 @@ cbuffer MaterialCBuffer : register(b2)
     PhongMaterial material;
 }
 
+cbuffer LightCBuffer : register(b3)
+{
+    Light cbLights[MAX_LIGHTS];
+}
+
 Texture2D g_MRT[4] : register(t0);
 
 SamplerState g_Sample : register(s0);
@@ -33,7 +39,15 @@ struct D_VS_OUTPUT
     float3 normal : NORMAL;
 };
 
-static const Light g_Light = { LIGHT_TYPE_DIRECTIONAL, float3(0.f, 0.f, 0.f), float4(1.f, 1.f, 1.f, 1.f), normalize(float3(-1.f, -1.f, 1.f)), 5.f, 1.f, 1.f, float2(0.f, 0.f) };
+// temp
+static const Light g_Light = { LIGHT_TYPE_DIRECTIONAL, float3(0.f, 0.f, 0.f), float4(1.f, 1.f, 1.f, 1.f), normalize(float3(-1.f, -1.f, 1.f)), 5.f, 1.f, 1.f, float2(0.f, 0.f), { 
+        float4x4(float4(0, 0, 0, 0), float4(0, 0, 0, 0), float4(0, 0, 0, 0), float4(0, 0, 0, 0)),
+        float4x4(float4(0, 0, 0, 0), float4(0, 0, 0, 0), float4(0, 0, 0, 0), float4(0, 0, 0, 0)),
+        float4x4(float4(0, 0, 0, 0), float4(0, 0, 0, 0), float4(0, 0, 0, 0), float4(0, 0, 0, 0)),
+        float4x4(float4(0, 0, 0, 0), float4(0, 0, 0, 0), float4(0, 0, 0, 0), float4(0, 0, 0, 0)),
+        float4x4(float4(0, 0, 0, 0), float4(0, 0, 0, 0), float4(0, 0, 0, 0), float4(0, 0, 0, 0)),
+        float4x4(float4(0, 0, 0, 0), float4(0, 0, 0, 0), float4(0, 0, 0, 0), float4(0, 0, 0, 0))
+    } };
 
 D_VS_OUTPUT DeferredRenderOnePathVS(D_VS_INPUT input)
 {

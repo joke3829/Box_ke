@@ -12,7 +12,9 @@ struct Light
     float       intensity;
     float       range;
     float       spotAngle;
-    float2      padding;
+    float       lightindex;
+    float       padding;
+    float4x4    shadowMapMatrix[6];
 };
 
 struct PhongMaterial
@@ -39,7 +41,7 @@ float CalculateBlinnPhongSpecular(in float3 wNormal, in float3 L, in float3 V, i
 
 float3 PhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye, in PhongMaterial material, in Light light)
 {
-    float3 lightColor = light.lightColor * light.intensity;
+    float3 lightColor = light.lightColor.rgb * light.intensity;
     float3 retColor = float3(0.f, 0.f, 0.f);
     float3 L;
     
@@ -63,7 +65,7 @@ float3 PhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye, in 
 
 float3 BlinnPhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye, in PhongMaterial material, in Light light)
 {
-    float3 lightColor = light.lightColor * light.intensity;
+    float3 lightColor = light.lightColor.rgb * light.intensity;
     float3 retColor = 0.2f * material.ambientColor.rgb + 8.f * material.emissiveColor.rgb;
     float3 L;
     

@@ -44,5 +44,8 @@ using Microsoft::WRL::ComPtr;
 int Align(int size, int multiple);
 
 
+// 조명 타입
+enum LightType { LT_DIRECTIONAL, LT_SPOT, LT_POINT };
+
 // DX11용 열거자
 enum ShaderType { ST_NONE, ST_VS, ST_HS, ST_DS, ST_GS, ST_PS, ST_CS };

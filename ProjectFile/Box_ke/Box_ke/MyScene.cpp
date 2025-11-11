@@ -380,7 +380,7 @@ void CDeferredRenderSceneDX11::BuildObjects()
 		.diffuseColor = {1.f, 1.f, 0.f, 1.f},
 		.specularColor = {1.f, 1.f, 1.f, 1.f},
 		.ambientColor = {1.f, 1.f, 0.f, 1.f},
-		.emissiveColor = {1.f, 1.f, 0.f, 0.f},
+		.emissiveColor = {0.f, 0.f, 0.f, 0.f},
 		.shininess = 32.f
 	};
 	std::shared_ptr<CMaterial> material1 = std::make_shared<CPhongShadingMaterialDX11>(m_Device.Get(), material);
@@ -522,8 +522,10 @@ void CDeferredRenderSceneDX11::UpdateObject(float elapsedTime, void* command)
 void CDeferredRenderSceneDX11::PreRender(void* command)
 {
 	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
-	float clearColor[] = { 0.f, 0.f, 0.f, 1.f };
-	for (int i = 0; i < m_RTVs.size(); ++i)
+	float clearColor[] = { 0.53f * 5.f, 0.81f * 5.f, 0.92f * 5.f, 1.f };
+	context->ClearRenderTargetView(m_RTVs[0].Get(), clearColor);
+	clearColor[0] = 0.f; clearColor[1] = 0.f; clearColor[2] = 0.f;
+	for (int i = 1; i < m_RTVs.size(); ++i)
 		context->ClearRenderTargetView(m_RTVs[i].Get(), clearColor);
 	ID3D11RenderTargetView* views[] = {
 		m_RTVs[0].Get(), m_RTVs[1].Get(), m_RTVs[2].Get(), m_RTVs[3].Get()
