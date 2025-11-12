@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "MyObject.h"
 #include "BloomProcessor.h"
+#include "LightManager.h"
 
 // Example
 class CTestSceneDX11 : public CScene {
@@ -113,4 +114,7 @@ protected:
 	bool							click{};
 
 	bool							m_OnBloom{ true };
+
+	// Light
+	std::shared_ptr<CLightManager>					m_LightManager{};
 };

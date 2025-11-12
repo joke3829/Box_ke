@@ -30,12 +30,14 @@ CLightManagerDX11::CLightManagerDX11(ID3D11Device* device)
 	: m_Device{ device }
 {
 	D3D11_BUFFER_DESC desc{};
-	desc.ByteWidth = Align(sizeof(LightCB) * MAX_LIGHTS, 16);
+	desc.ByteWidth = Align(sizeof(ShaderLightCB), 16);
 	desc.Usage = D3D11_USAGE_DYNAMIC;
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
 
 	device->CreateBuffer(&desc, nullptr, m_LightConstantBuffer.GetAddressOf());
+	m_LightCBInfo.reserve(MAX_LIGHTS);
+	m_Lights.reserve(MAX_LIGHTS);
 }
 
 void CLightManagerDX11::AddDirectionalLight(XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity)
@@ -89,7 +91,10 @@ void CLightManagerDX11::SetShaderVariable(void* command, ShaderType type)
 void CLightManagerDX11::UpdateConstantBuffer(ID3D11DeviceContext* context)
 {
 	D3D11_MAPPED_SUBRESOURCE mapped{};
+	UINT numLights = m_numPointLight + m_numDirAndSpotLight;
 	context->Map(m_LightConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-	memcpy(mapped.pData, m_LightCBInfo.data(), sizeof(LightCB) * (m_numDirAndSpotLight + m_numPointLight));
+	ShaderLightCB* p = reinterpret_cast<ShaderLightCB*>(mapped.pData);
+	memcpy(p->lights, m_LightCBInfo.data(), sizeof(LightCB) * (numLights));
+	p->numLights = numLights;
 	context->Unmap(m_LightConstantBuffer.Get(), 0);
 }

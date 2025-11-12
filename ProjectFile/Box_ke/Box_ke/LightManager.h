@@ -4,6 +4,11 @@
 
 constexpr UINT MAX_LIGHTS = 100;
 
+struct ShaderLightCB {
+	LightCB lights[MAX_LIGHTS];
+	UINT numLights{};
+};
+
 class CLightManager {
 public:
 	virtual void AddDirectionalLight(XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity) {}

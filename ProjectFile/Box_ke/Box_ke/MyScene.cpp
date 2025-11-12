@@ -329,7 +329,7 @@ void CDeferredRenderSceneDX11::CreateTargets()
 	
 	HRESULT hResult;
 
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < 5; ++i) {
 		ComPtr<ID3D11Texture2D> texture{};
 		ComPtr<ID3D11ShaderResourceView> srv{};
 		ComPtr<ID3D11RenderTargetView> rtv{};
@@ -386,14 +386,38 @@ void CDeferredRenderSceneDX11::BuildObjects()
 	std::shared_ptr<CMaterial> material1 = std::make_shared<CPhongShadingMaterialDX11>(m_Device.Get(), material);
 	material = {
 		.diffuseColor = {0.3f, 1.0f, 0.1f, 1.f},
-		.specularColor = {0.f, 0.f, 0.f, 1.f},
+		.specularColor = {1.f, 1.f, 1.f, 1.f},
 		.ambientColor = {0.3f, 1.0f, 0.1f, 1.f},
 		.emissiveColor = {0.f, 0.f, 0.f, 0.f},
 		.shininess = 128.f
 	};
 	std::shared_ptr<CMaterial> material2 = std::make_shared<CPhongShadingMaterialDX11>(m_Device.Get(), material);
+	material = {
+		.diffuseColor = {1.0f, 0.0f, 0.0f, 1.f},
+		.specularColor = {1.f, 1.f, 1.f, 1.f},
+		.ambientColor = {1.f, 0.0f, 0.0f, 1.f},
+		.emissiveColor = {1.f, 0.f, 0.f, 0.f},
+		.shininess = 128.f
+	};
+	std::shared_ptr<CMaterial> material3 = std::make_shared<CPhongShadingMaterialDX11>(m_Device.Get(), material);
+	material = {
+		.diffuseColor = {0.0f, 1.0f, 0.0f, 1.f},
+		.specularColor = {1.f, 1.f, 1.f, 1.f},
+		.ambientColor = {0.f, 1.0f, 0.0f, 1.f},
+		.emissiveColor = {0.f, 1.f, 0.f, 0.f},
+		.shininess = 128.f
+	};
+	std::shared_ptr<CMaterial> material4 = std::make_shared<CPhongShadingMaterialDX11>(m_Device.Get(), material);
 	material1->SetStartSlot(2);
 	material2->SetStartSlot(2);
+	material3->SetStartSlot(2);
+	material4->SetStartSlot(2);
+
+	m_LightManager = std::make_shared<CLightManagerDX11>(m_Device.Get());
+	m_LightManager->SetStartSlot(3);
+	//m_LightManager->AddDirectionalLight(XMFLOAT4(0.f, 0.f, 1.f, 1.f), XMFLOAT3(-1.f, -1.f, 1.f), 5.f);
+	//m_LightManager->AddDirectionalLight(XMFLOAT4(0.f, 1.f, 0.f, 1.f), XMFLOAT3(1.f, -1.f, 1.f), 7.f);
+	
 	{
 		std::shared_ptr<CGameObject> sp = std::make_shared<COrbitObjectDX11>(m_Device.Get());
 		m_Objects.push_back(sp);
@@ -408,9 +432,14 @@ void CDeferredRenderSceneDX11::BuildObjects()
 
 		cp = std::make_shared<COrbitObjectDX11>(m_Device.Get());
 		cp->SetMesh(mesh1);
-		cp->GetMaterials().push_back(material1);
+		cp->GetMaterials().push_back(material3);
 		cp->SetPosition(20.f, 0.f, 0.f);
 		cc.push_back(cp);
+
+		// ===========================================================
+		m_LightManager->AddPointLight(XMFLOAT3(0.f, 0.f, 0.f), XMFLOAT4(1.f, 0.f, 0.f, 1.f), 5.f, 60.f);
+		m_LightManager->GetLightWithIndex(0)->SetParentObject(cp.get());
+		// ===========================================================
 
 		cp = std::make_shared<CCircleObjectDX11>(m_Device.Get());
 		c.push_back(cp);
@@ -419,15 +448,20 @@ void CDeferredRenderSceneDX11::BuildObjects()
 
 		cp = std::make_shared<COrbitObjectDX11>(m_Device.Get());
 		cp->SetMesh(mesh0);
-		cp->GetMaterials().push_back(material1);
+		cp->GetMaterials().push_back(material4);
 		cp->SetPosition(10.f, 0.f, 0.f);
 		cd.push_back(cp);
+		// ===========================================================
+		m_LightManager->AddPointLight(XMFLOAT3(0.f, 0.f, 0.f), XMFLOAT4(0.f, 1.f, 0.f, 1.f), 3.f, 40.f);
+		m_LightManager->GetLightWithIndex(1)->SetParentObject(cp.get());
+		// ===========================================================
+		
 
 		m_Objects.emplace_back(std::make_shared<CGameObjectDX11>(m_Device.Get()));
 		m_Objects.back()->GetMaterials().push_back(material2);
 		m_Objects.back()->SetMesh(mesh2);
 		m_Objects.back()->RotateAbsAxis(90.0f);
-		m_Objects.back()->SetPosition(0.f, -20.f, 0.f);
+		m_Objects.back()->SetPosition(0.f, -30.f, 0.f);
 	}
 
 	m_BloomProcessor = std::make_shared<CBloomProcessorDX11>(m_ClientWidth, m_ClientHeight, m_Device.Get(), m_TextureRenderShader);
@@ -517,20 +551,22 @@ void CDeferredRenderSceneDX11::UpdateObject(float elapsedTime, void* command)
 {
 	for (std::shared_ptr<CGameObject>& object : m_Objects)
 		object->UpdateObject(elapsedTime);
+	// Light Matrix Update
+	m_LightManager->UpdateLights(elapsedTime);
 }
 
 void CDeferredRenderSceneDX11::PreRender(void* command)
 {
 	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
-	float clearColor[] = { 0.53f * 5.f, 0.81f * 5.f, 0.92f * 5.f, 1.f };
+	float clearColor[] = { 0.53f, 0.81f, 0.92f, 1.f };
 	context->ClearRenderTargetView(m_RTVs[0].Get(), clearColor);
 	clearColor[0] = 0.f; clearColor[1] = 0.f; clearColor[2] = 0.f;
 	for (int i = 1; i < m_RTVs.size(); ++i)
 		context->ClearRenderTargetView(m_RTVs[i].Get(), clearColor);
 	ID3D11RenderTargetView* views[] = {
-		m_RTVs[0].Get(), m_RTVs[1].Get(), m_RTVs[2].Get(), m_RTVs[3].Get()
+		m_RTVs[0].Get(), m_RTVs[1].Get(), m_RTVs[2].Get(), m_RTVs[3].Get(), m_RTVs[4].Get()
 	};
-	context->OMSetRenderTargets(4, views, m_MainDSV.Get());
+	context->OMSetRenderTargets(5, views, m_MainDSV.Get());
 }
 
 void CDeferredRenderSceneDX11::Render(void* command)
@@ -540,6 +576,7 @@ void CDeferredRenderSceneDX11::Render(void* command)
 	m_Camera->UpdateCameraBuffer(command);
 	m_Camera->SetShaderVariable(command, ST_VS);
 	m_Camera->SetShaderVariable(command, ST_PS);
+	m_LightManager->SetShaderVariable(command, ST_PS);
 
 	OnePathRender(context);
 	TwoPathRender(context);
@@ -573,10 +610,10 @@ void CDeferredRenderSceneDX11::TwoPathRender(ID3D11DeviceContext* context)
 	m_RenderShader->SetShader(context);
 
 	context->OMSetRenderTargets(1, m_OutputRTV.GetAddressOf(), nullptr);
-	ID3D11ShaderResourceView* views[4] = {
-		m_SRVs[0].Get(), m_SRVs[1].Get(), m_SRVs[2].Get(), m_SRVs[3].Get()
+	ID3D11ShaderResourceView* views[] = {
+		m_SRVs[0].Get(), m_SRVs[1].Get(), m_SRVs[2].Get(), m_SRVs[3].Get(), m_SRVs[4].Get()
 	};
-	context->PSSetShaderResources(0, 4, views);
+	context->PSSetShaderResources(0, 5, views);
 	m_Camera->SetShaderVariable(context, ST_PS);
 	context->DrawInstanced(6, 1, 0, 0);
 }

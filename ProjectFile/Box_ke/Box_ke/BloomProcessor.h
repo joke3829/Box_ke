@@ -16,7 +16,8 @@ protected:
 	UINT								m_clientWidth{};
 	UINT								m_clientHeight;
 
-	std::shared_ptr<CShader>			m_TextureRenderShader{};
+	//std::shared_ptr<CShader>			m_TextureRenderShader{};
+	std::shared_ptr<CShader>			m_TestShader{};
 	std::shared_ptr<CShader>			m_LuminanceShader{};
 	std::shared_ptr<CShader>			m_BleedingShader{};
 };

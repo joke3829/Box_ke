@@ -15,7 +15,8 @@ CBloomProcessorDX11::CBloomProcessorDX11(UINT width, UINT height, ID3D11Device* 
 	CreateBuffers(device);
 	CreateBlurProcessor(device);
 	m_LuminanceShader = std::make_shared<CLuminanceShaderDX11>(device);
-	m_TextureRenderShader = std::make_shared<CFullScreenTextrueRenderShaderDX11>(device);
+	//m_TextureRenderShader = std::make_shared<CFullScreenTextrueRenderShaderDX11>(device);
+	m_TestShader = std::make_shared<CFullScreenTextrueRenderShaderDX11>(device);
 	m_BleedingShader = std::make_shared<CTextureBleedingShaderDX11>(device);
 }
 
@@ -25,7 +26,8 @@ CBloomProcessorDX11::CBloomProcessorDX11(UINT width, UINT height, ID3D11Device* 
 	CreateBuffers(device);
 	CreateBlurProcessor(device);
 	m_LuminanceShader = std::make_shared<CLuminanceShaderDX11>(device);
-	m_TextureRenderShader = textureRenderShader;
+	//m_TextureRenderShader = textureRenderShader;
+	m_TestShader = std::make_shared<CFullScreenTextrueRenderShaderDX11>(device);
 	m_BleedingShader = std::make_shared<CTextureBleedingShaderDX11>(device);
 }
 
@@ -155,7 +157,8 @@ void CBloomProcessorDX11::Process(void* command, void* in_texture, void* out_tex
 	m_BlurProcessor6x6_2->Process(2, context, m_BleedingResult2.Get());
 
 	// 원복
-	m_TextureRenderShader->SetShader(context);
+	//m_TextureRenderShader->SetShader(context);
+	m_TestShader->SetShader(context);
 	context->OMSetRenderTargets(1, m_OriginSizeRTV.GetAddressOf(), nullptr);
 	context->RSSetViewports(1, &m_ViewPort[0]);
 	context->PSSetShaderResources(0, 1, m_BleedingSRV2.GetAddressOf());

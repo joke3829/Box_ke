@@ -63,7 +63,7 @@ void CLight::SetParentObject(CGameObject* target)
 
 void CLight::UpdateLightInfo()
 {
-	m_LightInfo.position = m_Position;
+	m_LightInfo.position = { m_WorldMatrix._41, m_WorldMatrix._42, m_WorldMatrix._43 };
 	if (m_LightInfo.type != LT_POINT) {
 		XMStoreFloat3(&m_LightInfo.direction, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_InitialDir), XMLoadFloat4x4(&m_WorldMatrix))));
 	}
