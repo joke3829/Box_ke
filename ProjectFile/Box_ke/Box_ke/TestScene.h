@@ -1,6 +1,8 @@
 #pragma once
 #include "Scene.h"
 #include "MyObject.h"
+#include "Animation.h"
+
 
 class CHeroScene : public CScene
 {
@@ -27,6 +29,7 @@ protected:
 	ID3D11Device* tempdev{};
 
 	std::shared_ptr<CGameObject> m_Hero{};
+
 
 };
 

@@ -1,118 +1,162 @@
 #include "Animation.h"
 
-bool Channel::ChangeInterAnim(float t, XMVECTOR& outPos, XMVECTOR& outQuat, XMVECTOR& outScale) const
-{
-	if (Keys.empty()) return false;
-
-	if (t <= Keys.front().Time) {
-		outPos = XMLoadFloat3(&Keys.front().Position);
-		outQuat = XMLoadFloat4(&Keys.front().RotationQuat);
-		outScale = XMLoadFloat3(&Keys.front().Scale);
-
-		return true;
-	}
-
-	if (t >= Keys.back().Time) {
-		outPos = XMLoadFloat3(&Keys.back().Position);
-		outQuat = XMLoadFloat4(&Keys.back().RotationQuat);
-		outScale = XMLoadFloat3(&Keys.back().Scale);
-		return true;
-	}
-
-	for (size_t i = 0; i + 1 < Keys.size(); ++i) {
-		const KeyFrame& a = Keys[i]; // 앞에 키
-		const KeyFrame& b = Keys[i+1]; // 뒤에 키
-
-		if (t >= a.Time && t <= b.Time) {
-			float localT = (t - a.Time) / (b.Time - a.Time);
-			XMVECTOR pa = XMLoadFloat3(&a.Position);
-			XMVECTOR pb = XMLoadFloat3(&b.Position);
-			outPos = XMVectorLerp(pa, pb, localT);
-
-			XMVECTOR qa = XMLoadFloat4(&a.RotationQuat);
-			XMVECTOR qb = XMLoadFloat4(&b.RotationQuat);
-			outQuat = XMQuaternionSlerp(qa, qb, localT);
-
-			XMVECTOR sa = XMLoadFloat3(&a.Scale);
-			XMVECTOR sb = XMLoadFloat3(&b.Scale);
-			outScale = XMVectorLerp(sa, sb, localT);
-			return true;
-		}
-		
-	}
-	return false;
-}
-
-//----------------------------------------------------------------------------------------------------------------
 
 CAnimation::CAnimation()
 {
 }
 
-void CAnimation::Play(AnimationClip* clip, bool loop)
+void CAnimation::AddKey(float time, const DirectX::XMFLOAT3& pos, const DirectX::XMFLOAT4& rot, const DirectX::XMFLOAT3& scale)
 {
-	m_Clip = clip;
-	m_Time = 0.0f;
-	m_Playing = (clip != nullptr);
-	m_Loop = loop;
-	m_InTransition = false;
-	m_ClipFrom = m_ClipTo = nullptr;
+	DirectX::XMFLOAT4 normalizedRot;
+
+	DirectX::XMVECTOR q = DirectX::XMQuaternionNormalize(DirectX::XMLoadFloat4(&rot));
+	DirectX::XMStoreFloat4(&normalizedRot, q);
+
+	auto k = std::make_shared<KeyframeDesc>();
+	k->Time = time;
+	k->Position = pos;
+	k->RotationQuat = normalizedRot;
+	k->Scale = scale;
+	KeyAll.push_back(k);
+
+
 }
 
-void CAnimation::stop()
+void CAnimation::AddKey(float time, const DirectX::XMFLOAT3& pos, const DirectX::XMFLOAT3& axis, float angleDegrees, const DirectX::XMFLOAT3& scale)
 {
-	m_Playing = false;
-	m_Clip = nullptr;
-	m_InTransition = false;
-	m_ClipFrom = m_ClipTo = nullptr;
-	m_Time = 0.0f;
+	XMVECTOR q = XMQuaternionRotationAxis(XMLoadFloat3(&axis), XMConvertToRadians(angleDegrees));
+	XMFLOAT4 rot;
+	XMStoreFloat4(&rot, XMQuaternionNormalize(q));
+
+	auto k = std::make_shared<KeyframeDesc>();
+	k->Time = time;
+	k->Position = pos;
+	k->RotationQuat = rot;
+	k->Scale = scale;
+
+	KeyAll.push_back(k);
 }
 
-void CAnimation::Update(float deltaTime)
+
+
+
+//-----------------------------------------
+
+CAnimPlayer::CAnimPlayer()
 {
-	if (!m_Playing) return;
-	if (m_InTransition) {
-		// advance both times
-		m_TimeFrom += deltaTime * m_Speed;
-		m_TimeTo += deltaTime * m_Speed;
-		m_TransTime += deltaTime;
-		if (m_TransTime >= m_TransDuration) {
-			m_Clip = m_ClipTo;
-			m_Time = m_TimeTo;
-			m_InTransition = false;
-			m_ClipFrom = m_ClipTo = nullptr;
+}
+
+void CAnimPlayer::AddAnimation()
+{
+}
+
+void CAnimPlayer::AddAnimation(const char* AnimName, shared_ptr<CAnimation> Anim)
+{
+	AnimationAll.try_emplace(AnimName, Anim);
+
+}
+
+
+bool  CAnimPlayer::Play(const string& name, bool loop = true)
+{
+	auto it = AnimationAll.find(name);
+	if (it == AnimationAll.end()) 
+		return false;
+	if (m_currName != name) {
+	
+		m_lastAnim = m_currAnim;
+		m_currAnim = it->second;
+		m_currName = name;
+	
+		m_state.currIndex = 0;
+	}
+	// 상태 리셋
+	m_state.playTime = 0.f;
+	m_state.looping = loop;
+	m_playing = true;
+	return true;
+}
+
+void CAnimPlayer::Stop()
+{
+	m_playing = false;
+}
+
+void CAnimPlayer::Update(float elapsedtime)
+{
+	if (!m_playing || m_currAnim == nullptr) return;
+	const auto& keys = m_currAnim->GetKeys();
+	size_t keyCount = keys.size();
+	if (keyCount == 0) return;
+
+
+	m_state.playTime += elapsedtime * m_state.speed;
+
+	float lastTime = keys.back()->Time;
+	if (m_state.playTime > lastTime) {
+		if (m_state.looping && lastTime > 0.0f) {
+			m_state.playTime = std::fmod(m_state.playTime, lastTime);
+			if (m_state.playTime < 0.f) m_state.playTime += lastTime;
+			m_state.currIndex = 0;
 		}
+		else {
+			m_state.playTime = lastTime;
+			m_state.currIndex = keyCount - 1;
+			m_playing = false;
+		}
+	}
+
+
+	while (m_state.currIndex + 1 < keyCount && m_state.playTime >= keys[m_state.currIndex + 1]->Time) {
+		++m_state.currIndex;
+	}
+
+
+	auto currKey = keys[m_state.currIndex];
+	std::shared_ptr<KeyframeDesc> nextKey = nullptr;
+	if (m_state.currIndex + 1 < keyCount) nextKey = keys[m_state.currIndex + 1];
+
+	float ratio = 0.f;
+	if (nextKey) {
+		float t0 = currKey->Time;
+		float t1 = nextKey->Time;
+		if (t1 > t0) ratio = (m_state.playTime - t0) / (t1 - t0);
+		else ratio = 0.f;
 	}
 	else {
-		m_Time += deltaTime * m_Speed;
-		if (m_Clip && m_Clip->fDuration > 0.0f) {
-			if (m_Loop) {
-				while (m_Time > m_Clip->fDuration) m_Time -= m_Clip->fDuration;
-			}
-			else {
-				if (m_Time > m_Clip->fDuration) { m_Time = m_Clip->fDuration; m_Playing = false; }
-			}
-		}
+		ratio = 0.f;
 	}
+
+	
+	ComputeCurrentPose(currKey, nextKey, ratio);
 }
 
-void CAnimation::StartTransition(AnimationClip* toClip, float duration)
+void CAnimPlayer::ComputeCurrentPose(std::shared_ptr<KeyframeDesc> a, shared_ptr<KeyframeDesc> b, float ratio)
 {
-	if (!m_Playing || !m_Clip) {
-	
-		Play(toClip, true);
+	if (!a) return;
+
+	if (!b) {
+		m_currPose = *a;
 		return;
 	}
-	m_InTransition = true;
-	m_ClipFrom = m_Clip;
-	m_ClipTo = toClip;
-	m_TimeFrom = m_Time;
-	m_TimeTo = 0.0f;
-	if (duration > 0.f)
-		m_TransDuration = duration;
-	else 
-		m_TransDuration = 0.001f;
 
-	m_TransTime = 0.0f;
+	XMVECTOR pa = XMLoadFloat3(&a->Position);
+	XMVECTOR pb = XMLoadFloat3(&b->Position);
+	XMVECTOR p = XMVectorLerp(pa, pb, ratio);
+	XMStoreFloat3(&m_currPose.Position, p);
+
+	XMVECTOR sa = XMLoadFloat3(&a->Scale);
+	XMVECTOR sb = XMLoadFloat3(&b->Scale);
+	XMVECTOR s = XMVectorLerp(sa, sb, ratio);
+	XMStoreFloat3(&m_currPose.Scale, s);
+
+	XMVECTOR qa = XMLoadFloat4(&a->RotationQuat);
+	XMVECTOR qb = XMLoadFloat4(&b->RotationQuat);
+	XMVECTOR qr = XMQuaternionSlerp(qa, qb, ratio);
+	XMStoreFloat4(&m_currPose.RotationQuat, qr);
+
+	// time
+	m_currPose.Time = a->Time + (b->Time - a->Time) * ratio;
 }
+
 

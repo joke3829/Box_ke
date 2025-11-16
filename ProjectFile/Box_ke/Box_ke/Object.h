@@ -19,7 +19,7 @@ public:
 	virtual void UpdateObject(float elapsedTime) {}
 	virtual void UpdateWorldMat();
 
-	virtual void UpdateAnim(float elapsedTime) {}	// 이거 새로 만들어도 되는지 물어보기
+
 
 	void SetMesh(std::shared_ptr<CMesh> mesh);
 	void SetMaterials(std::vector<std::shared_ptr<CMaterial>> material);
@@ -51,9 +51,14 @@ public:
 	void RotateAbsAxis(float AxisX = 0.f, float AxisY = 0.f, float AxisZ = 0.f);
 	void RotateAbsAxis(XMFLOAT3 rot = {});
 
+	void RotateAbsAxis(XMFLOAT4& quat);
+
 	void RotateLocalAxis(float right = 0.f, float up = 0.f, float look = 0.f);
 	void RotateLocalAxis(XMFLOAT3 rot = {});
 
+	void RotateLocalAxis(XMFLOAT4& quat);
+
+	
 	void ResetWorldMat();
 
 	virtual void Render(void* command) {}
@@ -82,7 +87,6 @@ class CGameObjectDX11 : public CGameObject {
 public:
 	CGameObjectDX11(void* device);
 	virtual void UpdateObject(float elapsedTime) {}
-	virtual void UpdateAnim(float elapsedTime) {}	// 이거 새로 만들어도 되는지 물어보기
 
 	virtual void Render(void* command);
 protected:
@@ -94,8 +98,8 @@ public:
 	CHierarchyGameObjectDX11(void* device);
 
 	virtual void UpdateObject(float elapsedTime) {}
-	virtual void UpdateAnim(float elapsedTime) {}	// 이거 새로 만들어도 되는지 물어보기
-	CAnimation& GetAnimPlayer() { return m_Animation; }
+
+
 
 	virtual void UpdateWorldMat();
 
@@ -110,7 +114,6 @@ protected:
 	XMFLOAT4X4								m_HierarchyWorldMat{};
 	std::vector<std::shared_ptr<CGameObject>>	m_Childs{};
 
-protected:
-	CAnimation m_Animation;
+
 
 };

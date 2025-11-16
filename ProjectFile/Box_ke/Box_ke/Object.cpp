@@ -137,6 +137,18 @@ void CGameObject::RotateAbsAxis(XMFLOAT3 rot)
 		XMStoreFloat3(&m_LookVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_LookVec), XMMatrixRotationZ(XMConvertToRadians(rot.z)))));
 	}
 }
+void CGameObject::RotateAbsAxis(XMFLOAT4& quat)
+{
+	XMMATRIX rotMat = XMMatrixRotationQuaternion(XMLoadFloat4(&quat));
+
+	// 기존의 Right/Up/Look 벡터를 모두 월드축 기준으로 회전
+	XMStoreFloat3(&m_RightVec,
+		XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_RightVec), rotMat)));
+	XMStoreFloat3(&m_UpVec,
+		XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_UpVec), rotMat)));
+	XMStoreFloat3(&m_LookVec,
+		XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_LookVec), rotMat)));
+}
 
 // 객체의 각 축을 이용한 회전
 // 회전은 right, up, look 순으로 진행한다.
@@ -158,7 +170,6 @@ void CGameObject::RotateLocalAxis(float right, float up, float look)
 		XMStoreFloat3(&m_UpVec, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_UpVec), XMMatrixRotationAxis(XMLoadFloat3(&m_LookVec), XMConvertToRadians(look)))));
 	}
 
-	m_Rotation = XMFLOAT3(atan2f(m_UpVec.y, m_UpVec.z), atan2f(m_LookVec.x, m_LookVec.z), atan2f(m_LookVec.y, m_UpVec.z));
 }
 
 void CGameObject::RotateLocalAxis(XMFLOAT3 rot)
@@ -181,6 +192,22 @@ void CGameObject::RotateLocalAxis(XMFLOAT3 rot)
 
 
 }
+
+void CGameObject::RotateLocalAxis(XMFLOAT4& quat)
+{
+	XMMATRIX rotMat = XMMatrixRotationQuaternion(XMLoadFloat4(&quat));
+
+	XMFLOAT3 right, up, look;
+	XMStoreFloat3(&right, rotMat.r[0]);
+	XMStoreFloat3(&up, rotMat.r[1]);
+	XMStoreFloat3(&look, rotMat.r[2]);
+
+	m_RightVec = right;
+	m_UpVec = up;
+	m_LookVec = look;
+}
+
+
 
 void CGameObject::ResetWorldMat()
 {

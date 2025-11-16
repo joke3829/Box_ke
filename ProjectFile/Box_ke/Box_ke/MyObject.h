@@ -14,6 +14,12 @@ public:
 	void UpdateObject(float elapsedTime);
 };
 
+class CBoxObjectDX11 : public CHierarchyGameObjectDX11 {
+public:
+	CBoxObjectDX11(void* command);
+	void UpdateObject(float elapsedTime);
+	void Roll();
+};
 
 //-----------------------------------------------------------------------------
 
@@ -24,34 +30,55 @@ public:
 	
 
 public:
-	void UpdateAnim(float elapsedTime);
+	void Initialize();
 
-
-
+	virtual shared_ptr<CAnimPlayer> GetAnimPlayer(){
+		return m_Animplayer;
+	}
+protected:
+	shared_ptr<CAnimPlayer> m_Animplayer;
 
 };
-class CBodyObjectDX11 : public CHierarchyGameObjectDX11 {
+
+class CBodyObjectDX11 : public CHeroObjectDX11 {
 public:
 	CBodyObjectDX11(void* device);
 	void UpdateObject(float elapsedTime);
 
 public:
-	void UpdateAnim(float elapsedTime);
-
-
-
+	void Initialize();
 
 };
 
 
-class CArmObjectDX11 : public CHierarchyGameObjectDX11 {
+class CGunObjectDX11 : public CHeroObjectDX11 {
 public:
-	CArmObjectDX11(void* device);
+	CGunObjectDX11(void* device);
 	void UpdateObject(float elapsedTime);
-	
-public:
 
-	void UpdateAnim(float elapsedTime);
+	void AimAtMouse();
+
+
+
+public:
+	void SetHero(shared_ptr<CGameObject> hero) { m_Hero = hero; }
+
+public:
+	void Initialize();
+
+	XMVECTOR ComputeAimQuaternion();
+	void ApplyQuaternionToOrientation(XMVECTOR q);
+protected:
+
+	shared_ptr<CGameObject> m_Hero;
+	shared_ptr<CAnimPlayer> m_GunAnimplayer;
+
+	enum GUN_STATE { GUN_IDLE, GUN_ANIMATING };
+	GUN_STATE m_State = GUN_IDLE;
+	XMFLOAT4 m_LastMouseQuat;
+
+	float prevMousePos_x;
+	float prevMousePos_y;
 
 
 	
