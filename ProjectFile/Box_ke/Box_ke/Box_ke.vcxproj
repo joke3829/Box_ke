@@ -149,7 +149,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BloomProcessor.cpp" />
-    <ClCompile Include="BlurPorcessor.cpp" />
     <ClCompile Include="BlurProcessor.cpp" />
     <ClCompile Include="Box_ke.cpp" />
     <ClCompile Include="Camera.cpp" />

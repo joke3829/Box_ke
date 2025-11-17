@@ -1,4 +1,4 @@
-﻿#include "Mesh.h"
+#include "Mesh.h"
 
 // BasedOnViewport = true, 평면의 좌측위를 중심으로 평면을 정의
 CMesh::CMesh(float width, float height, bool BasedOnViewport)

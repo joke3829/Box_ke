@@ -452,7 +452,7 @@ void CDeferredRenderSceneDX11::BuildObjects()
 		cp->SetPosition(10.f, 0.f, 0.f);
 		cd.push_back(cp);
 		// ===========================================================
-		m_LightManager->AddPointLight(XMFLOAT3(0.f, 0.f, 0.f), XMFLOAT4(0.f, 1.f, 0.f, 1.f), 3.f, 40.f);
+		m_LightManager->AddPointLight(XMFLOAT3(0.f, 0.f, 0.f), XMFLOAT4(0.f, 1.f, 0.f, 1.f), 10.f, 40.f);
 		m_LightManager->GetLightWithIndex(1)->SetParentObject(cp.get());
 		// ===========================================================
 		
@@ -463,6 +463,7 @@ void CDeferredRenderSceneDX11::BuildObjects()
 		m_Objects.back()->RotateAbsAxis(90.0f);
 		m_Objects.back()->SetPosition(0.f, -30.f, 0.f);
 	}
+	m_LightManager->AddDirectionalLight(XMFLOAT4(0.2, 0.7, 0.8, 1.0), XMFLOAT3(-1.f, -1.f, 2.f), 10.f);
 
 	m_BloomProcessor = std::make_shared<CBloomProcessorDX11>(m_ClientWidth, m_ClientHeight, m_Device.Get(), m_TextureRenderShader);
 }
@@ -549,8 +550,8 @@ void CDeferredRenderSceneDX11::MouseMessageProcessing(HWND hWnd, UINT message, W
 
 void CDeferredRenderSceneDX11::UpdateObject(float elapsedTime, void* command)
 {
-	for (std::shared_ptr<CGameObject>& object : m_Objects)
-		object->UpdateObject(elapsedTime);
+	/*for (std::shared_ptr<CGameObject>& object : m_Objects)
+		object->UpdateObject(elapsedTime);*/
 	// Light Matrix Update
 	m_LightManager->UpdateLights(elapsedTime);
 }

@@ -173,11 +173,8 @@
     <ClCompile Include="BloomProcessor.cpp">
       <Filter>소스 파일\PostProcess\Bloom</Filter>
     </ClCompile>
-    <ClCompile Include="BlurPorcessor.cpp">
-      <Filter>소스 파일\PostProcess\Blur</Filter>
-    </ClCompile>
     <ClCompile Include="BlurProcessor.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\PostProcess\Blur</Filter>
     </ClCompile>
     <ClCompile Include="LightManager.cpp">
       <Filter>소스 파일\Resource\Light\LightManager</Filter>
