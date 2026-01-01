@@ -1,4 +1,4 @@
-﻿// ====================================================
+// ====================================================
 // Object.h
 // Object 정보를 정리한 헤더
 // 
@@ -10,12 +10,16 @@
 #include "stdafx.h"
 #include "Mesh.h"
 #include "Material.h"
+#include "Animation.h"
+
 
 class CGameObject {
 public:
 	CGameObject() {}
 	virtual void UpdateObject(float elapsedTime) {}
 	virtual void UpdateWorldMat();
+
+
 
 	void SetMesh(std::shared_ptr<CMesh> mesh);
 	void SetMaterials(std::vector<std::shared_ptr<CMaterial>> material);
@@ -26,6 +30,8 @@ public:
 	void SetPosition(float x, float y, float z);
 	void SetPosition(XMFLOAT3 pos);
 
+
+
 	void SetStartSlot(UINT slot);
 	void SetRootParameterIndex(UINT index);
 
@@ -33,7 +39,9 @@ public:
 	XMFLOAT3 GetUpVec() const;
 	XMFLOAT3 GetLookVec() const;
 	XMFLOAT3 GetPosition() const;
+	XMFLOAT3 GetRotation() const;
 	XMFLOAT3 GetScaleFactor() const;
+
 	XMFLOAT4X4 GetWorldMatrix();
 
 	std::vector<std::shared_ptr<CMaterial>>& GetMaterials();
@@ -46,6 +54,8 @@ public:
 	void RotateLocalAxis(float right = 0.f, float up = 0.f, float look = 0.f);
 	void RotateLocalAxis(XMFLOAT3 rot = {});
 
+	void RotateLocalAxis(XMFLOAT4& quat);
+
 	void ResetWorldMat();
 
 	virtual void Render(void* command) {}
@@ -56,6 +66,7 @@ protected:
 	XMFLOAT3					m_UpVec{ 0.f, 1.f, 0.f };
 	XMFLOAT3					m_LookVec{ 0.f, 0.f, 1.f };
 	XMFLOAT3					m_Position{};
+	XMFLOAT3					m_Rotation{};
 
 	XMFLOAT3					m_ScaleFactor{ 1.f, 1.f, 1.f };	// 각각 xyz 스케일 정도
 
@@ -84,6 +95,9 @@ public:
 	CHierarchyGameObjectDX11(void* device);
 
 	virtual void UpdateObject(float elapsedTime) {}
+
+
+
 	virtual void UpdateWorldMat();
 
 	void SetParentMat(XMFLOAT4X4 mat);
@@ -96,4 +110,7 @@ protected:
 	XMFLOAT4X4								m_ParentWorldMat{};
 	XMFLOAT4X4								m_HierarchyWorldMat{};
 	std::vector<std::shared_ptr<CGameObject>>	m_Childs{};
+
+
+
 };

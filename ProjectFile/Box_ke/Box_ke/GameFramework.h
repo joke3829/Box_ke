@@ -8,6 +8,7 @@
 #include "Timer.h"
 #include "Camera.h"
 #include "MyScene.h"
+#include "TestScene.h"
 
 // Base Class=======================================================
 class CGameFramework {
