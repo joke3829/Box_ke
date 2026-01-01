@@ -30,7 +30,16 @@ cbuffer PhongMaterialCBuffer : register(b2)
     PhongMaterial material;
 }
 
-static const Light g_Light = { LIGHT_TYPE_DIRECTIONAL, float3(0.f, 0.f, 0.f), float4(1.f, 1.f, 1.f, 1.f), normalize(float3(-1.f, -1.f, 1.f)), 1.f, 1.f, 1.f, float2(0.f, 0.f) };
+static const Light g_Light = { LIGHT_TYPE_DIRECTIONAL, float3(0.f, 0.f, 0.f), float4(1.f, 1.f, 1.f, 1.f), normalize(float3(-1.f, -1.f, 1.f)), 1.f, 1.f, 1.f, 1.f, 1.f,
+    {
+        float4x4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    float4x4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    float4x4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    float4x4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    float4x4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    float4x4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    }
+};
 
 VS_OUTPUT vsmain(VS_INPUT input)
 {
