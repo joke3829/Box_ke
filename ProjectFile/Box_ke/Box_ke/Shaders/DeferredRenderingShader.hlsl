@@ -124,16 +124,6 @@ DT_PS_INPUT DeferredRenderTwoPathVS(uint nVertexID : SV_VertexID)
 
 float4 DeferredRenderTwoPathPS(DT_PS_INPUT input) : SV_Target
 {
-    //return g_MRT[0].Sample(g_Sample, input.uv);
-    //return float4(g_MRT[1].Sample(g_Sample, input.uv).rgb, 1.f);
-    
-    //float depth = g_MRT[2].Sample(g_Sample, input.uv).a;
-    //return float4(depth, depth, depth, 1.f);
-    
-    //float3 normal = g_MRT[3].Sample(g_Sample, input.uv).rgb;
-    //normal = (normal + 1.f) / 2.f;
-    //return float4(normal, 1.f);
-    
     float4 diffuseColor = g_MRT[0].Sample(g_Sample, input.uv);
     float4 specularAndSh = g_MRT[1].Sample(g_Sample, input.uv);
     float4 emissiveAndDepth = g_MRT[2].Sample(g_Sample, input.uv);
@@ -142,26 +132,13 @@ float4 DeferredRenderTwoPathPS(DT_PS_INPUT input) : SV_Target
     
     if (emissiveAndDepth.a == 1.f)
         return diffuseColor;
-    
-    /*float2 viewportxy = float2(input.pos.x, input.pos.y);
-    viewportxy.x = viewportxy.x / 1920 * 2.f - 1.f;     // temp
-    viewportxy.y = viewportxy.y / 1080 * 2.f - 1.f;     // temp
-    viewportxy.y *= -1;
-    
-    float4 projpos = float4(viewportxy, emissiveAndDepth.a, 1.f);
-    float4 temppos = mul(projpos, InvViewProj);*/
-    //float3 wPos = temppos.xyz / temppos.w;
-    
-    
+
     PhongMaterial tempColor =
     {
         diffuseColor, float4(specularAndSh.rgb, 1.f), diffuseColor, 
         float4(emissiveAndDepth.rgb, 1.f), specularAndSh.a, float3(0.f, 0.f, 0.f)
     };
-    
-    //float3 test = (wPos + 50) / 100.f;
-    //return float4(test, 1.f);
-    
+
     float3 pixelColor = float3(0.f, 0.f, 0.f);
     for (uint i = 0; i < numLights; ++i)
     {
