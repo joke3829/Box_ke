@@ -69,6 +69,7 @@
     </Filter>
     <Filter Include="소스 파일\Resource\Light\LightManager">
       <UniqueIdentifier>{00ad8117-919b-4c12-8f8a-3622ac5fd6a0}</UniqueIdentifier>
+    </Filter>
     <Filter Include="소스 파일\Animation">
       <UniqueIdentifier>{2b2381bf-51cb-4a6c-a8ee-178f2c9dd0b9}</UniqueIdentifier>
     </Filter>
@@ -130,6 +131,7 @@
     </ClInclude>
     <ClInclude Include="Light.h">
       <Filter>소스 파일\Resource\Light</Filter>
+    </ClInclude> 
     <ClInclude Include="TestScene.h">
       <Filter>소스 파일\Scene\CustomScene</Filter>
     </ClInclude>
@@ -188,6 +190,7 @@
     </ClCompile>
     <ClCompile Include="Light.cpp">
       <Filter>소스 파일\Resource\Light</Filter>
+    </ClCompile>
     <ClCompile Include="TestScene.cpp">
       <Filter>소스 파일\Scene\CustomScene</Filter>
     </ClCompile>
