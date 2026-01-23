@@ -131,7 +131,7 @@
     </ClInclude>
     <ClInclude Include="Light.h">
       <Filter>소스 파일\Resource\Light</Filter>
-    </ClInclude> 
+    </ClInclude>
     <ClInclude Include="TestScene.h">
       <Filter>소스 파일\Scene\CustomScene</Filter>
     </ClInclude>
@@ -228,6 +228,9 @@
       <Filter>소스 파일\Shader\ShaderFile</Filter>
     </None>
     <None Include="Shaders\GaussianBlurShader.hlsl">
+      <Filter>소스 파일\Shader\ShaderFile</Filter>
+    </None>
+    <None Include="Shaders\ShadowMap.hlsl">
       <Filter>소스 파일\Shader\ShaderFile</Filter>
     </None>
   </ItemGroup>

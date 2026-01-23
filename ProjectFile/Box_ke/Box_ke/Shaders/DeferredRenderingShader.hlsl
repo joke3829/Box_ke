@@ -26,7 +26,9 @@ cbuffer LightCBuffer : register(b3)
 
 Texture2D g_MRT[5] : register(t0);
 
-SamplerState g_Sample : register(s0);
+
+
+//SamplerState g_Sample : register(s0);
 
 struct D_VS_INPUT
 {
@@ -124,6 +126,16 @@ DT_PS_INPUT DeferredRenderTwoPathVS(uint nVertexID : SV_VertexID)
 
 float4 DeferredRenderTwoPathPS(DT_PS_INPUT input) : SV_Target
 {
+    //float3 debugDir = float3(1.0f, (1.0f - input.uv.y) * 2.0f - 1.0f, (1.0f - input.uv.x) * 2.0f - 1.0f);
+    //float3 debugDir = float3(input.uv.x * 2.0f - 1.0f, -1.0f, input.uv.y * 2.0f - 1.0f);
+    
+    //float3 uvPlane = float3(input.uv.x * 2.0f - 1.0f, input.uv.y * 2.0f - 1.0f, 0.0f);
+    //float3 middleDir = float3(0.0f, -1.0f, 1.0f);
+    //float3 debugDir = normalize(uvPlane + middleDir);
+    //float3 debugDir = float3(input.uv.x * 2.0f - 1.0f, (1.0f - input.uv.y) * 2.0f - 1.0f, -1.0f);
+    //float4 debugColor = g_ShadowMapCube[1].Sample(g_Sample, normalize(debugDir)).rrrr;
+    //return debugColor;
+    
     float4 diffuseColor = g_MRT[0].Sample(g_Sample, input.uv);
     float4 specularAndSh = g_MRT[1].Sample(g_Sample, input.uv);
     float4 emissiveAndDepth = g_MRT[2].Sample(g_Sample, input.uv);
@@ -144,6 +156,6 @@ float4 DeferredRenderTwoPathPS(DT_PS_INPUT input) : SV_Target
     {
         pixelColor += BlinnPhongLightingResult(wPos, wNormal, cameraEye, tempColor, cbLights[i]);
     }
-    pixelColor += (0.2 * diffuseColor.rgb);
-    return float4(pixelColor, 1.f);
+    pixelColor += ((0.2 * diffuseColor.rgb) + (25.f * emissiveAndDepth.rgb)); // ambient + emissive
+    return float4(pixelColor, 1.f); 
 }

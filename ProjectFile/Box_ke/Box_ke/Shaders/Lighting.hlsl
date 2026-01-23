@@ -12,9 +12,9 @@ struct Light
     float       intensity;
     float       range;
     float       spotAngle;
-    float       lightindex;
+    uint        lightindex;
     float       padding;
-    float4x4    shadowMapMatrix[6];
+    float4x4    shadowMapMatrix;
 };
 
 struct PhongMaterial
@@ -26,6 +26,13 @@ struct PhongMaterial
     float       shininess;
     float3      padding;
 };
+
+
+// shadow map test
+TextureCubeArray g_ShadowMapCube : register(t7);
+Texture2DArray g_ShadowMap : register(t8);
+
+SamplerState g_Sample : register(s0);
 
 float CalculatePhongSpecular(in float3 wNormal, in float3 L, in float3 V, in float shininess)
 {
@@ -66,7 +73,8 @@ float3 PhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye, in 
 float3 BlinnPhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye, in PhongMaterial material, in Light light)
 {
     float3 lightColor = light.lightColor.rgb * light.intensity;
-    float3 retColor = 25.f * material.emissiveColor.rgb;
+    uint lightindex = light.lightindex;
+    float3 retColor = float3(0.f, 0.f, 0.f); //25.f * material.emissiveColor.rgb;
     //float3 retColor = 0.2f * material.ambientColor.rgb + 8.f * material.emissiveColor.rgb;
     float3 L;
     
@@ -98,15 +106,21 @@ float3 BlinnPhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye
                     float distance_to_light = distance(wPos, light.position);
                     if (distance_to_light <= light.range)
                     {
-                        float percentage = pow((light.range - distance_to_light) / light.range, 2.f);
-                        lightColor *= percentage;
-                        float diffusefactor = max(dot(wNormal, L), 0.f);
-                        float3 V = normalize(eye - wPos);
-                        float Specularfactor = CalculateBlinnPhongSpecular(wNormal, L, V, material.shininess);
+                        float shadowMapDepth = g_ShadowMapCube.Sample(g_Sample, float4(normalize(-L), lightindex)).r;
+                        float tdepth = distance_to_light / light.range;
+                        
+                        if (tdepth <= shadowMapDepth + 0.005f)
+                        {
+                            float percentage = pow((light.range - distance_to_light) / light.range, 2.f);
+                            lightColor *= percentage;
+                            float diffusefactor = max(dot(wNormal, L), 0.f);
+                            float3 V = normalize(eye - wPos);
+                            float Specularfactor = CalculateBlinnPhongSpecular(wNormal, L, V, material.shininess);
         
-                        retColor = retColor +
+                            retColor = retColor +
                         (diffusefactor * material.diffuseColor.rgb * lightColor) +
                         (Specularfactor * material.specularColor.rgb * lightColor);
+                        }
                     }
                 }
                 break;

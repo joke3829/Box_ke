@@ -434,10 +434,11 @@ void CDeferredRenderSceneDX11::BuildObjects()
 		cp->SetMesh(mesh1);
 		cp->GetMaterials().push_back(material3);
 		cp->SetPosition(20.f, 0.f, 0.f);
+		//cp->SetPosition(20000.f, 10.f, 0.f);
 		cc.push_back(cp);
 
 		// ===========================================================
-		m_LightManager->AddPointLight(XMFLOAT3(0.f, 0.f, 0.f), XMFLOAT4(1.f, 0.f, 0.f, 1.f), 5.f, 60.f);
+		m_LightManager->AddPointLight(XMFLOAT3(0.f, 0.f, 0.f), XMFLOAT4(1.f, 0.f, 0.f, 1.f), 5.f, 80.f);
 		m_LightManager->GetLightWithIndex(0)->SetParentObject(cp.get());
 		// ===========================================================
 
@@ -450,9 +451,10 @@ void CDeferredRenderSceneDX11::BuildObjects()
 		cp->SetMesh(mesh0);
 		cp->GetMaterials().push_back(material4);
 		cp->SetPosition(10.f, 0.f, 0.f);
+		//cp->SetPosition(10.f, -10.f, 0.f);
 		cd.push_back(cp);
 		// ===========================================================
-		m_LightManager->AddPointLight(XMFLOAT3(0.f, 0.f, 0.f), XMFLOAT4(0.f, 1.f, 0.f, 1.f), 10.f, 40.f);
+		m_LightManager->AddPointLight(XMFLOAT3(0.f, 0.f, 0.f), XMFLOAT4(0.f, 1.f, 0.f, 1.f), 10.f, 50.f);
 		m_LightManager->GetLightWithIndex(1)->SetParentObject(cp.get());
 		// ===========================================================
 		
@@ -463,7 +465,7 @@ void CDeferredRenderSceneDX11::BuildObjects()
 		m_Objects.back()->RotateAbsAxis(90.0f);
 		m_Objects.back()->SetPosition(0.f, -30.f, 0.f);
 	}
-	m_LightManager->AddDirectionalLight(XMFLOAT4(0.2, 0.7, 0.8, 1.0), XMFLOAT3(-1.f, -1.f, 2.f), 10.f);
+	//m_LightManager->AddDirectionalLight(XMFLOAT4(0.2, 0.7, 0.8, 1.0), XMFLOAT3(-1.f, -1.f, 2.f), 10.f);
 
 	m_BloomProcessor = std::make_shared<CBloomProcessorDX11>(m_ClientWidth, m_ClientHeight, m_Device.Get(), m_TextureRenderShader);
 }
@@ -553,7 +555,8 @@ void CDeferredRenderSceneDX11::UpdateObject(float elapsedTime, void* command)
 	/*for (std::shared_ptr<CGameObject>& object : m_Objects)
 		object->UpdateObject(elapsedTime);*/
 	// Light Matrix Update
-	m_LightManager->UpdateLights(elapsedTime);
+	//m_LightManager->UpdateLights(elapsedTime);
+	m_LightManager->UpdateLights(elapsedTime, command, m_Objects);
 }
 
 void CDeferredRenderSceneDX11::PreRender(void* command)
@@ -610,7 +613,10 @@ void CDeferredRenderSceneDX11::TwoPathRender(ID3D11DeviceContext* context)
 {
 	m_RenderShader->SetShader(context);
 
+	m_LightManager->SetShadowMapTextureShaderVariable(context, ST_PS);
+
 	context->OMSetRenderTargets(1, m_OutputRTV.GetAddressOf(), nullptr);
+	//context->OMSetRenderTargets(1, m_MainRTV.GetAddressOf(), nullptr);
 	ID3D11ShaderResourceView* views[] = {
 		m_SRVs[0].Get(), m_SRVs[1].Get(), m_SRVs[2].Get(), m_SRVs[3].Get(), m_SRVs[4].Get()
 	};
