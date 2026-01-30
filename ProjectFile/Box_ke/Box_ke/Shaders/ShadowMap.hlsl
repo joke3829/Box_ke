@@ -40,14 +40,15 @@ VS_OUTPUT ShadowMapVS(VS_INPUT input)
     VS_OUTPUT output;
     output.wPos = mul(float4(input.pos, 1.f), WorldMat);
     output.pos = mul(output.wPos, viewProj);
-    output.normal = mul(input.normal, (float3x3) WorldMat);
-
+    output.normal = float3(0, 0, 0);
     return output;
 }
 
 float ShadowMapPS(VS_OUTPUT input) : SV_Target
 {
+    // pointlight일 경우 dis를 저장한다. 이외엔 깊이값 저장
+    uint t = cbLight.type / 2;      // dir, spot = 0, point = 1
     float3 dis = distance(input.wPos.xyz, cbLight.position);
-    return dis / cbLight.range;
+    return ((1 - t) * ((input.pos.z))) + (t * (dis / cbLight.range));
     //return input.pos.z / input.pos.w;
 }

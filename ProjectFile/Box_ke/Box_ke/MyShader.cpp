@@ -242,7 +242,7 @@ void CDeferredRenderingTwoPathShaderDX11::CreatePS(ID3D11Device* device)
 	ComPtr<ID3D11SamplerState> sampler{};
 
 	D3D11_SAMPLER_DESC desc{};
-	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -493,8 +493,8 @@ void CShadowMapShaderDX11::ShaderReCompile(void* device)
 {
 	ID3D11Device* td = reinterpret_cast<ID3D11Device*>(device);
 
-	m_SamplerStates.clear();
-	m_Samplers.clear();
+	//m_SamplerStates.clear();
+	//m_Samplers.clear();
 
 	CreateVSAndInputLayout(td);
 	CreatePS(td);
@@ -531,10 +531,10 @@ void CShadowMapShaderDX11::CreatePS(ID3D11Device* device)
 		PostQuitMessage(0);
 	}
 
-	ComPtr<ID3D11SamplerState> sampler{};
+	/*ComPtr<ID3D11SamplerState> sampler{};
 
 	D3D11_SAMPLER_DESC desc{};
-	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -546,7 +546,7 @@ void CShadowMapShaderDX11::CreatePS(ID3D11Device* device)
 	}
 
 	m_SamplerStates.push_back(sampler);
-	m_Samplers.push_back(sampler.Get());
+	m_Samplers.push_back(sampler.Get());*/
 }
 // ComputeShader ================================================================================================
 

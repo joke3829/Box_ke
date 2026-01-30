@@ -70,6 +70,11 @@ XMFLOAT3 CCamera::GetRightVec() const
 	return m_RightVec;
 }
 
+XMMATRIX& CCamera::GetInvViewProjMaxtrix()
+{
+	return m_InvViewProjMatrix;
+}
+
 void CCamera::MakeRightVec()
 {
 	XMStoreFloat3(&m_RightVec, XMVector3Cross(XMLoadFloat3(&m_UpVec), XMLoadFloat3(&m_LookVec)));
@@ -143,6 +148,8 @@ void CCameraDX11::UpdateCameraBuffer(void* command)
 		viewProj = Mat * m_ProjectionMatrix;
 		Mat = XMMatrixInverse(nullptr, viewProj);
 	}
+
+	m_InvViewProjMatrix = Mat;
 
 	viewProj = XMMatrixTranspose(viewProj);
 	Mat = XMMatrixTranspose(Mat);

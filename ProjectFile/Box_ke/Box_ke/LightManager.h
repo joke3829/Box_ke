@@ -12,12 +12,12 @@ struct ShaderLightCB {
 
 class CLightManager {
 public:
-	virtual void AddDirectionalLight(XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity) {}
-	virtual void AddSpotLight(XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity, float range, float spotAngle) {}
+	virtual void AddDirectionalLight(XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up, float intensity) {}
+	virtual void AddSpotLight(XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up, float intensity, float range, float spotAngle) {}
 	virtual void AddPointLight(XMFLOAT3 pos, XMFLOAT4 lightColor, float intensity, float range) {}
 
 	virtual void UpdateLights(float elapsedTime);
-	virtual void UpdateLights(float elapsedTime, void* command, std::vector<std::shared_ptr<CGameObject>>& objects) {}	// Update With ShadowMap
+	virtual void UpdateLights(float elapsedTime, void* command, std::vector<std::shared_ptr<CGameObject>>& objects, CCamera* camera = nullptr) {}	// Update With ShadowMap
 	virtual void SetShaderVariable(void* command, ShaderType type = ST_NONE) {}
 	virtual void SetShadowMapTextureShaderVariable(void* command, ShaderType type = ST_NONE) {}
 	virtual void SetShadowMapShader(void* command) {}
@@ -47,11 +47,12 @@ class CLightManagerDX11 : public CLightManager {
 public:
 	CLightManagerDX11(ID3D11Device* device);
 
-	void AddDirectionalLight(XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity);
-	void AddSpotLight(XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity, float range, float spotAngle);
+	void AddDirectionalLight(XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up, float intensity);
+	void AddSpotLight(XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up, float intensity, float range, float spotAngle);
 	void AddPointLight(XMFLOAT3 pos, XMFLOAT4 lightColor, float intensity, float range);
 
-	void UpdateLights(float elapsedTime, void* command, std::vector<std::shared_ptr<CGameObject>>& objects);	// Update With ShadowMap
+	// Directional을 위해 메인 카메라의 정보를 넘겨주게 수정하라
+	void UpdateLights(float elapsedTime, void* command, std::vector<std::shared_ptr<CGameObject>>& objects, CCamera* camera = nullptr);	// Update With ShadowMap
 
 	//void UpdateLights(float elapsedTime);
 	void SetShaderVariable(void* command, ShaderType type = ST_NONE);

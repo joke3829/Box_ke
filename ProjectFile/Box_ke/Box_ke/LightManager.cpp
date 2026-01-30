@@ -3,8 +3,9 @@
 // 시간의 따른 조명 변화와 행렬(LightInfo) 최신화
 void CLightManager::UpdateLights(float elapsedTime)
 { 
+	std::vector<std::shared_ptr<CGameObject>> temp{};
 	for (auto& p : m_Lights) {
-		p->UpdateLight(elapsedTime);
+		p->UpdateLight(elapsedTime, nullptr, temp);
 		p->UpdateMatrix();
 	}
 }
@@ -97,18 +98,18 @@ CLightManagerDX11::CLightManagerDX11(ID3D11Device* device)
 	}
 }
 
-void CLightManagerDX11::AddDirectionalLight(XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity)
+void CLightManagerDX11::AddDirectionalLight(XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up, float intensity)
 {
 	m_LightCBInfo.emplace_back();
-	std::shared_ptr<CLightDX11> temp = std::make_shared<CLightDX11>(m_Device, m_LightCBInfo.back(), lightColor, direction, intensity, m_ShadowMapArray.Get(), m_numDirAndSpotLight++);
+	std::shared_ptr<CLightDX11> temp = std::make_shared<CLightDX11>(m_Device, m_LightCBInfo.back(), lightColor, direction, up, intensity, m_ShadowMapArray.Get(), m_numDirAndSpotLight++);
 	m_Lights.emplace_back(temp);
 	//m_ShadowMapSRVs[m_numDirAndSpotLight++] = temp->GetShadowMapSRV();
 }
 
-void CLightManagerDX11::AddSpotLight(XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity, float range, float spotAngle)
+void CLightManagerDX11::AddSpotLight(XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up, float intensity, float range, float spotAngle)
 {
 	m_LightCBInfo.emplace_back();
-	std::shared_ptr<CLightDX11> temp = std::make_shared<CLightDX11>(m_Device, m_LightCBInfo.back(), pos, lightColor, direction, intensity, range, spotAngle, m_ShadowMapArray.Get(), m_numDirAndSpotLight++);
+	std::shared_ptr<CLightDX11> temp = std::make_shared<CLightDX11>(m_Device, m_LightCBInfo.back(), pos, lightColor, direction, up, intensity, range, spotAngle, m_ShadowMapArray.Get(), m_numDirAndSpotLight++);
 	m_Lights.emplace_back(temp);
 	//m_ShadowMapSRVs[m_numDirAndSpotLight++] = temp->GetShadowMapSRV();
 }
@@ -121,13 +122,13 @@ void CLightManagerDX11::AddPointLight(XMFLOAT3 pos, XMFLOAT4 lightColor, float i
 	//m_ShadowMapCubeSRVs[m_numPointLight++] = temp->GetShadowMapSRV();
 }
 
-void CLightManagerDX11::UpdateLights(float elapsedTime, void* command, std::vector<std::shared_ptr<CGameObject>>& objects)
+void CLightManagerDX11::UpdateLights(float elapsedTime, void* command, std::vector<std::shared_ptr<CGameObject>>& objects, CCamera* camera)
 {
 	// shadowMap Shader Set
 	m_ShadowMapShader->SetShader(command);
 
 	for (auto& p : m_Lights) { // include ShadowMap Update
-		p->UpdateLight(elapsedTime, command, objects);
+		p->UpdateLight(elapsedTime, command, objects, camera);
 	}
 }
 

@@ -1,5 +1,6 @@
 #include "Lighting.hlsl"
 #define MAX_LIGHTS 100
+//#define DEBUG_TEST
 
 cbuffer ObjectCBuffer : register(b0)
 {
@@ -71,7 +72,7 @@ D_PS_OUTPUT DeferredRenderOnePathPS(D_VS_OUTPUT input)
     output.SpecularAndSh.a = material.shininess;
     
     output.EmissiveAndDepth.rgb = material.emissiveColor.rgb;
-    output.EmissiveAndDepth.a = input.pos.z / input.pos.w;
+    output.EmissiveAndDepth.a = input.pos.z;
     
     output.Normal = float4(normalize(input.normal), 1.f);
     //output.Normal = float4(input.normal, 1.f);
@@ -126,21 +127,23 @@ DT_PS_INPUT DeferredRenderTwoPathVS(uint nVertexID : SV_VertexID)
 
 float4 DeferredRenderTwoPathPS(DT_PS_INPUT input) : SV_Target
 {
-    //float3 debugDir = float3(1.0f, (1.0f - input.uv.y) * 2.0f - 1.0f, (1.0f - input.uv.x) * 2.0f - 1.0f);
-    //float3 debugDir = float3(input.uv.x * 2.0f - 1.0f, -1.0f, input.uv.y * 2.0f - 1.0f);
     
-    //float3 uvPlane = float3(input.uv.x * 2.0f - 1.0f, input.uv.y * 2.0f - 1.0f, 0.0f);
-    //float3 middleDir = float3(0.0f, -1.0f, 1.0f);
-    //float3 debugDir = normalize(uvPlane + middleDir);
-    //float3 debugDir = float3(input.uv.x * 2.0f - 1.0f, (1.0f - input.uv.y) * 2.0f - 1.0f, -1.0f);
-    //float4 debugColor = g_ShadowMapCube[1].Sample(g_Sample, normalize(debugDir)).rrrr;
-    //return debugColor;
     
     float4 diffuseColor = g_MRT[0].Sample(g_Sample, input.uv);
     float4 specularAndSh = g_MRT[1].Sample(g_Sample, input.uv);
     float4 emissiveAndDepth = g_MRT[2].Sample(g_Sample, input.uv);
     float3 wNormal = normalize(g_MRT[3].Sample(g_Sample, input.uv).rgb);
     float3 wPos = g_MRT[4].Sample(g_Sample, input.uv).rgb;
+    
+    
+    // debug =============================
+    #ifdef DEBUG_TEST
+    float4 debugColor = g_ShadowMap.Sample(g_Sample, float3(input.uv, 0)).rrrr;
+    return debugColor; 
+     #endif
+    
+    // ====================================
+    
     
     if (emissiveAndDepth.a == 1.f)
         return diffuseColor;

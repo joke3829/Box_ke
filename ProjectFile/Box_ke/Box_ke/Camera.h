@@ -1,4 +1,4 @@
-﻿
+
 #pragma once
 #include "stdafx.h"
 class CGameObject;
@@ -35,6 +35,8 @@ public:
 	XMFLOAT3 GetLookVec() const;
 	XMFLOAT3 GetRightVec() const;
 
+	XMMATRIX& GetInvViewProjMaxtrix();
+
 	void MakeRightVec();
 
 	void Move(float speed, float elapsedTime, XMFLOAT3 arrow = {});
@@ -51,6 +53,8 @@ protected:
 	XMFLOAT3		m_RightVec{};
 
 	XMMATRIX		m_ProjectionMatrix{};
+	
+	XMMATRIX		m_InvViewProjMatrix{};		// add 26.01.27, Directional ShadowMap을 위해 추가
 
 	// 3인칭 옵션
 	bool			m_bThirdPerson{};

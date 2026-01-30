@@ -82,7 +82,6 @@ float3 BlinnPhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye
         L = -light.direction;
     else
         L = light.position - wPos;
-    L = normalize(L);
     
     if (dot(material.emissiveColor.rgb, float3(1.f, 1.f, 1.f)) == 0.f)
     {
@@ -99,23 +98,53 @@ float3 BlinnPhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye
                 }
                 break;
             case LIGHT_TYPE_SPOTLIGHT:{
-            
+                    float3 nL = normalize(L);
+                    float distance_to_light = length(L);
+                    float cdot = cos(radians(light.spotAngle / 2));
+                    float ddotL = dot(normalize(light.direction), -nL);
+                    if (distance_to_light <= light.range && cdot <= ddotL)  // 현재는 페넘브라 감쇄 없는걸로
+                    {
+                        float4 subjectPos = mul(float4(wPos, 1.f), light.shadowMapMatrix);
+                        float3 ndcPos = subjectPos.xyz / subjectPos.w;
+                        float2 uv = (float2(ndcPos.x, -ndcPos.y) *0.5f) + 0.5f;
+                        float shadowMapDepth = g_ShadowMap.Sample(g_Sample, float3(uv, lightindex)).r;
+                        
+                        /*float diff = ndcPos.z - shadowMapDepth;
+                        if(diff >= 0.00001f)
+                            retColor = float4(0, 0, 0, 1);
+                        else
+                            retColor = float4(1, 1, 1, 1);*/
+                        
+                        if (ndcPos.z <= shadowMapDepth + 0.000001f)     // bias 계속 조정 필요
+                        {
+                            float percentage = pow((light.range - distance_to_light) / light.range, 2.f);
+                            lightColor *= percentage;
+                            float diffusefactor = max(dot(wNormal, nL), 0.f);
+                            float3 V = normalize(eye - wPos);
+                            float Specularfactor = CalculateBlinnPhongSpecular(wNormal, nL, V, material.shininess);
+        
+                            retColor = retColor +
+                        (diffusefactor * material.diffuseColor.rgb * lightColor) +
+                        (Specularfactor * material.specularColor.rgb * lightColor);
+                        }
+                    }
                 }
                 break;
             case LIGHT_TYPE_POINTLIGHT:{
                     float distance_to_light = distance(wPos, light.position);
                     if (distance_to_light <= light.range)
                     {
-                        float shadowMapDepth = g_ShadowMapCube.Sample(g_Sample, float4(normalize(-L), lightindex)).r;
+                        float3 nL = normalize(L);
+                        float shadowMapDepth = g_ShadowMapCube.Sample(g_Sample, float4(-nL, lightindex)).r;
                         float tdepth = distance_to_light / light.range;
                         
-                        if (tdepth <= shadowMapDepth + 0.005f)
+                        if (tdepth <= shadowMapDepth + 0.00001f)
                         {
                             float percentage = pow((light.range - distance_to_light) / light.range, 2.f);
                             lightColor *= percentage;
-                            float diffusefactor = max(dot(wNormal, L), 0.f);
+                            float diffusefactor = max(dot(wNormal, nL), 0.f);
                             float3 V = normalize(eye - wPos);
-                            float Specularfactor = CalculateBlinnPhongSpecular(wNormal, L, V, material.shininess);
+                            float Specularfactor = CalculateBlinnPhongSpecular(wNormal, nL, V, material.shininess);
         
                             retColor = retColor +
                         (diffusefactor * material.diffuseColor.rgb * lightColor) +

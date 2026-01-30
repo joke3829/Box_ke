@@ -1,8 +1,12 @@
 #include "Light.h"
 
-CLight::CLight(LightCB& cb, XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity, UINT index)
+CLight::CLight(LightCB& cb, XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up, float intensity, UINT index)
 	: m_LightInfo{ cb }
 {
+	XMFLOAT3 ndir, nUp;
+	XMStoreFloat3(&ndir, XMLoadFloat3(&direction));
+	XMStoreFloat3(&nUp, XMLoadFloat3(&up));
+
 	cb.type = LT_DIRECTIONAL;
 	cb.lightColor = lightColor;
 	cb.direction = direction;
@@ -10,6 +14,7 @@ CLight::CLight(LightCB& cb, XMFLOAT4 lightColor, XMFLOAT3 direction, float inten
 	cb.index = index;
 
 	m_InitialDir = direction;
+	m_InitialUp = nUp;
 	// temp
 	XMStoreFloat4x4(&m_ProjMatrix, XMMatrixOrthographicLH(DEFAULT_SHADOWMAP_SIZE, DEFAULT_SHADOWMAP_SIZE, 0.001f, 500.f));
 
@@ -17,22 +22,26 @@ CLight::CLight(LightCB& cb, XMFLOAT4 lightColor, XMFLOAT3 direction, float inten
 	XMStoreFloat4x4(&m_WorldMatrix, XMMatrixIdentity());
 }
 
-CLight::CLight(LightCB& cb, XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity, float range, float spotAngle, UINT index)
+CLight::CLight(LightCB& cb, XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up, float intensity, float range, float spotAngle, UINT index)
 	: m_LightInfo{ cb }
 {
+	XMFLOAT3 ndir, nUp;
+	XMStoreFloat3(&ndir, XMLoadFloat3(&direction));
+	XMStoreFloat3(&nUp, XMLoadFloat3(&up));
+
 	cb.type = LT_SPOT;
 	cb.position = pos;
 	cb.lightColor = lightColor;
-	cb.direction = direction;
+	cb.direction = ndir;
 	cb.intensity = intensity;
 	cb.range = range;
 	cb.spotAngle = spotAngle;
 	cb.index = index;
 
 	m_Position = pos;
-	m_InitialDir = direction;
-
-	XMStoreFloat4x4(&m_ProjMatrix, XMMatrixPerspectiveFovLH(spotAngle, 1.f, 0.001f, range));
+	m_InitialDir = ndir;
+	m_InitialUp = nUp;
+	XMStoreFloat4x4(&m_ProjMatrix, XMMatrixPerspectiveFovLH(XMConvertToRadians(spotAngle), 1.f, 0.001f, range));
 
 	XMStoreFloat4x4(&m_LocalMatrix, XMMatrixIdentity());
 	XMStoreFloat4x4(&m_WorldMatrix, XMMatrixIdentity());
@@ -50,7 +59,7 @@ CLight::CLight(LightCB& cb, XMFLOAT3 pos, XMFLOAT4 lightColor, float intensity, 
 
 	m_Position = pos;
 
-	XMStoreFloat4x4(&m_ProjMatrix, XMMatrixPerspectiveFovLH(90.f, 1.f, 0.001f, range));
+	XMStoreFloat4x4(&m_ProjMatrix, XMMatrixPerspectiveFovLH(XMConvertToRadians(90.f), 1.f, 0.001f, range));
 
 	XMStoreFloat4x4(&m_LocalMatrix, XMMatrixIdentity());
 	XMStoreFloat4x4(&m_WorldMatrix, XMMatrixIdentity());
@@ -61,15 +70,39 @@ void CLight::SetParentObject(CGameObject* target)
 	m_ParentObject = target;
 }
 
-void CLight::UpdateLightInfo()
+void CLight::UpdateLightInfo(CCamera* camera)
 {
-	m_LightInfo.position = { m_WorldMatrix._41, m_WorldMatrix._42, m_WorldMatrix._43 };
+	/*m_LightInfo.position = { m_WorldMatrix._41, m_WorldMatrix._42, m_WorldMatrix._43 };
 	if (m_LightInfo.type != LT_POINT) {
 		XMStoreFloat3(&m_LightInfo.direction, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_InitialDir), XMLoadFloat4x4(&m_WorldMatrix))));
+	}*/
+	m_LightInfo.position = { m_WorldMatrix._41, m_WorldMatrix._42, m_WorldMatrix._43 };
+	switch (m_LightInfo.type) {
+	case LT_POINT: {
+		break;
+	}
+	case LT_SPOT: {
+		XMStoreFloat3(&m_LightInfo.direction, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_InitialDir), XMLoadFloat4x4(&m_WorldMatrix))));
+		XMVECTOR eye = XMLoadFloat3(&m_LightInfo.position);
+		XMVECTOR up = XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_InitialUp), XMLoadFloat4x4(&m_WorldMatrix)));
+		XMMATRIX proj = XMLoadFloat4x4(&m_ProjMatrix);
+		XMMATRIX view;
+		view = XMMatrixLookToLH(eye, XMLoadFloat3(&m_LightInfo.direction), up);
+		XMStoreFloat4x4(&m_LightInfo.ShadowMapMatrix, XMMatrixTranspose(view * proj));
+		break;
+	}
+	case LT_DIRECTIONAL: {
+		// 카메라를 이용해 view frustum을 덮는 viewproj 행렬을 만들어 저장하라
+
+		break;
+	}
+	default: {
+		break;
+	}
 	}
 }
 
-void CLight::UpdateMatrix()	// 부정확
+void CLight::UpdateMatrix(CCamera* camera)	// 부정확, 계층 구조 없음
 {
 	m_LocalMatrix._11 = m_Right.x; m_LocalMatrix._12 = m_Right.y; m_LocalMatrix._13 = m_Right.z; m_LocalMatrix._14 = 0;
 	m_LocalMatrix._21 = m_Up.x; m_LocalMatrix._22 = m_Up.y; m_LocalMatrix._23 = m_Up.z; m_LocalMatrix._24 = 0;
@@ -87,8 +120,8 @@ void CLight::UpdateMatrix()	// 부정확
 
 // =======================================================================================
 
-CLightDX11::CLightDX11(ID3D11Device* device, LightCB& cb, XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity, ID3D11Texture2D* gShadowMap, UINT index)
-	: CLight(cb, lightColor, direction, intensity, index)
+CLightDX11::CLightDX11(ID3D11Device* device, LightCB& cb, XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up, float intensity, ID3D11Texture2D* gShadowMap, UINT index)
+	: CLight(cb, lightColor, direction, up, intensity, index)
 {
 	// temp
 	m_Viewport = { 0, 0, DEFAULT_SHADOWMAP_SIZE, DEFAULT_SHADOWMAP_SIZE, 0.f, 1.f };
@@ -96,11 +129,11 @@ CLightDX11::CLightDX11(ID3D11Device* device, LightCB& cb, XMFLOAT4 lightColor, X
 	ReadyElements(device, gShadowMap);
 }
 
-CLightDX11::CLightDX11(ID3D11Device* device, LightCB& cb, XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity, float range, float spotAngle, ID3D11Texture2D* gShadowMap, UINT index)
-	: CLight(cb, pos, lightColor, direction, intensity, range, spotAngle, index)
+CLightDX11::CLightDX11(ID3D11Device* device, LightCB& cb, XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up, float intensity, float range, float spotAngle, ID3D11Texture2D* gShadowMap, UINT index)
+	: CLight(cb, pos, lightColor, direction, up, intensity, range, spotAngle, index)
 {
 	m_Viewport = { 0, 0, DEFAULT_SHADOWMAP_SIZE, DEFAULT_SHADOWMAP_SIZE, 0.f, 1.f };
-	XMStoreFloat4x4(&m_ProjMatrix, XMMatrixPerspectiveFovLH(XMConvertToRadians(90.f), 1.f, 0.01f, range));
+	//XMStoreFloat4x4(&m_ProjMatrix, XMMatrixPerspectiveFovLH(XMConvertToRadians(spotAngle), 1.f, 0.01f, range));
 	ReadyElements(device, gShadowMap);
 }
 
@@ -108,7 +141,7 @@ CLightDX11::CLightDX11(ID3D11Device* device, LightCB& cb, XMFLOAT3 pos, XMFLOAT4
 	: CLight(cb, pos, lightColor, intensity, range, index)
 {
 	m_Viewport = { 0, 0, DEFAULT_SHADOWMAP_SIZE, DEFAULT_SHADOWMAP_SIZE, 0.f, 1.f };
-	XMStoreFloat4x4(&m_ProjMatrix, XMMatrixPerspectiveFovLH(XMConvertToRadians(90.f), 1.f, 0.01f, range));
+	//XMStoreFloat4x4(&m_ProjMatrix, XMMatrixPerspectiveFovLH(XMConvertToRadians(90.f), 1.f, 0.01f, range));
 	ReadyElements(device, gShadowMap, true);
 }
 
@@ -201,7 +234,7 @@ void CLightDX11::ReadyElements(ID3D11Device* device, ID3D11Texture2D* gShadowMap
 	device->CreateBuffer(&bdesc, nullptr, m_cbLightBuffer.GetAddressOf());
 }
 
-void CLightDX11::UpdateMatrix()
+void CLightDX11::UpdateMatrix(CCamera* camera)
 {
 	m_LocalMatrix._11 = m_Right.x; m_LocalMatrix._12 = m_Right.y; m_LocalMatrix._13 = m_Right.z; m_LocalMatrix._14 = 0;
 	m_LocalMatrix._21 = m_Up.x; m_LocalMatrix._22 = m_Up.y; m_LocalMatrix._23 = m_Up.z; m_LocalMatrix._24 = 0;
@@ -217,17 +250,17 @@ void CLightDX11::UpdateMatrix()
 	else
 		m_WorldMatrix = m_LocalMatrix;
 
-	UpdateLightInfo();
+	UpdateLightInfo(camera);
 }
 
-void CLightDX11::UpdateShadowMap(void* command, std::vector<std::shared_ptr<CGameObject>>& objects, bool useCameraPos, XMFLOAT3 cameraPos)
+void CLightDX11::UpdateShadowMap(void* command, std::vector<std::shared_ptr<CGameObject>>& objects)
 {
 	ID3D11DeviceContext* context = reinterpret_cast<ID3D11DeviceContext*>(command);
+	float clearColor[4] = { 1.f, 0.f, 0.f, 0.f };
+	context->RSSetViewports(1, &m_Viewport);
 
 	switch (m_LightInfo.type) {
 	case LT_POINT: {
-		float clearColor[4] = { 1.f, 0.f, 0.f, 0.f };
-		context->RSSetViewports(1, &m_Viewport);
 		XMVECTOR eye = XMLoadFloat3(&m_LightInfo.position);
 		XMMATRIX proj = XMLoadFloat4x4(&m_ProjMatrix);
 		XMMATRIX view;
@@ -248,10 +281,6 @@ void CLightDX11::UpdateShadowMap(void* command, std::vector<std::shared_ptr<CGam
 			{0.f, 1.f, 0.f, 0.f},
 			{0.f, 1.f, 0.f, 0.f}
 		};
-		/*for (int i = 0; i < 6; ++i) {
-			view = XMMatrixLookToLH(eye, dir[i], up[i]);
-			XMStoreFloat4x4(&m_LightInfo.ShadowMapMatrix[i], XMMatrixTranspose(view * proj));
-		}*/
 		for (int i = 0; i < 6; ++i) {
 			context->OMSetRenderTargets(1, m_ShadowMapRTVs[i].GetAddressOf(), m_DepthStencilView.Get());
 			context->ClearRenderTargetView(m_ShadowMapRTVs[i].Get(), clearColor);
@@ -278,57 +307,44 @@ void CLightDX11::UpdateShadowMap(void* command, std::vector<std::shared_ptr<CGam
 		break;
 	}
 	case LT_SPOT: {
+		context->OMSetRenderTargets(1, m_ShadowMapRTVs[0].GetAddressOf(), m_DepthStencilView.Get());
+		context->ClearRenderTargetView(m_ShadowMapRTVs[0].Get(), clearColor);
+		context->ClearDepthStencilView(m_DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
+
+		D3D11_MAPPED_SUBRESOURCE mapped{};
+		context->Map(m_ViewProjBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+		memcpy(mapped.pData, &m_LightInfo.ShadowMapMatrix, sizeof(XMFLOAT4X4));
+		context->Unmap(m_ViewProjBuffer.Get(), 0);
+
+		context->Map(m_cbLightBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+		memcpy(mapped.pData, &m_LightInfo, sizeof(LightCB));
+		context->Unmap(m_cbLightBuffer.Get(), 0);
+
+		context->VSSetConstantBuffers(1, 1, m_ViewProjBuffer.GetAddressOf());
+		context->PSSetConstantBuffers(3, 1, m_cbLightBuffer.GetAddressOf());
+
+		for (auto& p : objects) {
+			p->Render(context);
+		}
 		break;
 	}
 	case LT_DIRECTIONAL: {
+
 		break;
 	}
 	}
 }
 
-void CLightDX11::UpdateLight(float elapsedTime, void* command, std::vector<std::shared_ptr<CGameObject>>& objects)
+void CLightDX11::UpdateLight(float elapsedTime, void* command, std::vector<std::shared_ptr<CGameObject>>& objects, CCamera* camera)
 {
-	UpdateMatrix();
+	UpdateMatrix(camera);
 	UpdateShadowMap(command, objects);	// 추가 할거면 하고
 }
 
-void CLightDX11::UpdateLightInfo()
-{
-	m_LightInfo.position = { m_WorldMatrix._41, m_WorldMatrix._42, m_WorldMatrix._43 };
-	switch (m_LightInfo.type) {
-	case LT_POINT: {
-		/*XMVECTOR eye = XMLoadFloat3(&m_LightInfo.position);
-		XMMATRIX proj = XMLoadFloat4x4(&m_ProjMatrix);
-		XMMATRIX view;
-		XMVECTOR dir[6] = {
-			{1.f, 0.f, 0.f, 0.f},
-			{-1.f, 0.f, 0.f, 0.f},
-			{0.f, 1.f, 0.f, 0.f},
-			{0.f, -1.f, 0.f, 0.f},
-			{0.f, 0.f, 1.f, 0.f},
-			{0.f, 0.f, -1.f, 0.f}
-		};
-
-		XMVECTOR up[6] = {
-			{0.f, 1.f, 0.f, 0.f},
-			{0.f, 1.f, 0.f, 0.f},
-			{0.f, 0.f,-1.f, 0.f},
-			{0.f, 0.f, 1.f, 0.f},
-			{0.f, 1.f, 0.f, 0.f},
-			{0.f, 1.f, 0.f, 0.f}
-		};
-		for (int i = 0; i < 6; ++i) {
-			view = XMMatrixLookToLH(eye, dir[i], up[i]);
-			XMStoreFloat4x4(&m_LightInfo.ShadowMapMatrix[i], XMMatrixTranspose(view * proj));
-		}*/
-		break;
-	}
-	default: {
-		XMStoreFloat3(&m_LightInfo.direction, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_InitialDir), XMLoadFloat4x4(&m_WorldMatrix))));
-		break;
-	}
-	}
-}
+//void CLightDX11::UpdateLightInfo(CCamera* camera)
+//{
+//	
+//}
 
 //ID3D11ShaderResourceView* CLightDX11::GetShadowMapSRV()
 //{

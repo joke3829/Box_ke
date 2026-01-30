@@ -1,6 +1,8 @@
 #pragma once
 #include "stdafx.h"
 #include "Object.h"
+#include "Camera.h"
+
 struct alignas(16) LightCB {
 	UINT type{};
 	XMFLOAT3 position{};
@@ -17,9 +19,9 @@ struct alignas(16) LightCB {
 constexpr UINT DEFAULT_SHADOWMAP_SIZE = 1024;
 
 class CLight {
-public:
-	CLight(LightCB& cb, XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity, UINT index);		// Directional Light
-	CLight(LightCB& cb, XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity, float range, float spotAngle, UINT index);	// Spot Light
+public: // up을 넣을 때 dir과 완전 반대방향으로 넣지 않도록 한다.
+	CLight(LightCB& cb, XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up, float intensity, UINT index);		// Directional Light
+	CLight(LightCB& cb, XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up, float intensity, float range, float spotAngle, UINT index);	// Spot Light
 	CLight(LightCB& cb, XMFLOAT3 pos, XMFLOAT4 lightColor, float intensity, float range, UINT index);	// Point Light
 
 	void SetParentObject(CGameObject* target);
@@ -28,13 +30,13 @@ public:
 	void Rotate() {}
 	// ============================
 
-	virtual void UpdateLightInfo();
-	virtual void UpdateMatrix();
-	virtual void UpdateLight(float elapsedTime) {}		// like animation
-	virtual void UpdateShadowMap(void* command, std::vector<std::shared_ptr<CGameObject>>& objects, bool useCameraPos = false, XMFLOAT3 cameraPos = {}) {}	// Directional Light
+	virtual void UpdateLightInfo(CCamera* camera = nullptr);
+	virtual void UpdateMatrix(CCamera* camera = nullptr);
+	//virtual void UpdateLight(float elapsedTime) {}		// like animation 폐기
+	virtual void UpdateShadowMap(void* command, std::vector<std::shared_ptr<CGameObject>>& objects) {}
 
 	// Animation + matrix + shadowMap Update
-	virtual void UpdateLight(float elapsedTime, void* command, std::vector<std::shared_ptr<CGameObject>>& objects) {}	
+	virtual void UpdateLight(float elapsedTime, void* command, std::vector<std::shared_ptr<CGameObject>>& objects, CCamera* camera = nullptr) {}
 protected:
 	LightCB&				m_LightInfo;
 	CGameObject*			m_ParentObject{};
@@ -49,20 +51,21 @@ protected:
 
 	XMFLOAT3				m_Position{};
 	XMFLOAT3				m_InitialDir{};
+	XMFLOAT3				m_InitialUp{};		// 될 수 있으면 Dir과 수직으로 가게 만들자
 };
 
 class CLightDX11 : public CLight {
-public:
-	CLightDX11(ID3D11Device* device, LightCB& cb, XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity, ID3D11Texture2D* gShadowMap, UINT index);		// Directional Light
-	CLightDX11(ID3D11Device* device, LightCB& cb, XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 direction, float intensity, float range, float spotAngle, ID3D11Texture2D* gShadowMap, UINT index);	// Spot Light
+public:		// up을 넣을 때 dir과 완전 반대방향으로 넣지 않도록 한다.
+	CLightDX11(ID3D11Device* device, LightCB& cb, XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up, float intensity, ID3D11Texture2D* gShadowMap, UINT index);		// Directional Light
+	CLightDX11(ID3D11Device* device, LightCB& cb, XMFLOAT3 pos, XMFLOAT4 lightColor, XMFLOAT3 up, XMFLOAT3 direction, float intensity, float range, float spotAngle, ID3D11Texture2D* gShadowMap, UINT index);	// Spot Light
 	CLightDX11(ID3D11Device* device, LightCB& cb, XMFLOAT3 pos, XMFLOAT4 lightColor, float intensity, float range, ID3D11Texture2D* gShadowMap, UINT index);	// Point Light
 
-	virtual void UpdateMatrix();
-	void UpdateShadowMap(void* command, std::vector<std::shared_ptr<CGameObject>>& objects, bool useCameraPos = false, XMFLOAT3 cameraPos = {});
+	void UpdateMatrix(CCamera* camera = nullptr);
+	void UpdateShadowMap(void* command, std::vector<std::shared_ptr<CGameObject>>& objects);
 
 	// Animation + matrix + shadowMap Update
-	void UpdateLight(float elapsedTime, void* command, std::vector<std::shared_ptr<CGameObject>>& objects);
-	void UpdateLightInfo();
+	virtual void UpdateLight(float elapsedTime, void* command, std::vector<std::shared_ptr<CGameObject>>& objects, CCamera* camera = nullptr);
+	//void UpdateLightInfo(CCamera* camera = nullptr);
 
 	//ID3D11ShaderResourceView* GetShadowMapSRV();
 protected:
