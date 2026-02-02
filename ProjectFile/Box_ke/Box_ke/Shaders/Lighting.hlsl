@@ -12,7 +12,9 @@ struct Light
     float       intensity;
     float       range;
     float       spotAngle;
-    float2      padding;
+    float       lightindex;
+    float       padding;
+    float4x4    shadowMapMatrix[6];
 };
 
 struct PhongMaterial
@@ -39,6 +41,7 @@ float CalculateBlinnPhongSpecular(in float3 wNormal, in float3 L, in float3 V, i
 
 float3 PhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye, in PhongMaterial material, in Light light)
 {
+    float3 lightColor = light.lightColor.rgb * light.intensity;
     float3 retColor = float3(0.f, 0.f, 0.f);
     float3 L;
     
@@ -54,15 +57,17 @@ float3 PhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye, in 
         float Specularfactor = CalculatePhongSpecular(wNormal, L, V, material.shininess);
         
         retColor =
-        (diffusefactor * material.diffuseColor.rgb * light.lightColor.rgb) +
-        (Specularfactor * material.specularColor.rgb * light.lightColor.rgb);
+        (diffusefactor * material.diffuseColor.rgb * lightColor) +
+        (Specularfactor * material.specularColor.rgb * lightColor);
 
-    return clamp(retColor + 0.2f * material.ambientColor.rgb + material.emissiveColor.rgb, float3(0.f, 0.f, 0.f), float3(1.f, 1.f, 1.f));
+    return retColor + 0.2f * material.ambientColor.rgb + material.emissiveColor.rgb;
 }
 
 float3 BlinnPhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye, in PhongMaterial material, in Light light)
 {
-    float3 retColor = float3(0.f, 0.f, 0.f);
+    float3 lightColor = light.lightColor.rgb * light.intensity;
+    float3 retColor = 25.f * material.emissiveColor.rgb;
+    //float3 retColor = 0.2f * material.ambientColor.rgb + 8.f * material.emissiveColor.rgb;
     float3 L;
     
     if (light.type == LIGHT_TYPE_DIRECTIONAL)
@@ -71,13 +76,42 @@ float3 BlinnPhongLightingResult(in float3 wPos, in float3 wNormal, in float3 eye
         L = light.position - wPos;
     L = normalize(L);
     
-    float diffusefactor = max(dot(wNormal, L), 0.f);
-    float3 V = normalize(eye - wPos);
-    float Specularfactor = CalculateBlinnPhongSpecular(wNormal, L, V, material.shininess);
+    if (dot(material.emissiveColor.rgb, float3(1.f, 1.f, 1.f)) == 0.f)
+    {
+        switch (light.type)
+        {
+            case LIGHT_TYPE_DIRECTIONAL:{
+                    float diffusefactor = max(dot(wNormal, L), 0.f);
+                    float3 V = normalize(eye - wPos);
+                    float Specularfactor = CalculateBlinnPhongSpecular(wNormal, L, V, material.shininess);
         
-    retColor =
-    (diffusefactor * material.diffuseColor.rgb * light.lightColor.rgb) +
-    (Specularfactor * material.specularColor.rgb * light.lightColor.rgb);
-    //return retColor + 0.2f * material.ambientColor.rgb + material.emissiveColor.rgb;
-    return clamp(retColor + 0.2f * material.ambientColor.rgb + material.emissiveColor.rgb, float3(0.f, 0.f, 0.f), float3(1.f, 1.f, 1.f));
+                    retColor = retColor +
+                    (diffusefactor * material.diffuseColor.rgb * lightColor) +
+                    (Specularfactor * material.specularColor.rgb * lightColor);
+                }
+                break;
+            case LIGHT_TYPE_SPOTLIGHT:{
+            
+                }
+                break;
+            case LIGHT_TYPE_POINTLIGHT:{
+                    float distance_to_light = distance(wPos, light.position);
+                    if (distance_to_light <= light.range)
+                    {
+                        float percentage = pow((light.range - distance_to_light) / light.range, 2.f);
+                        lightColor *= percentage;
+                        float diffusefactor = max(dot(wNormal, L), 0.f);
+                        float3 V = normalize(eye - wPos);
+                        float Specularfactor = CalculateBlinnPhongSpecular(wNormal, L, V, material.shininess);
+        
+                        retColor = retColor +
+                        (diffusefactor * material.diffuseColor.rgb * lightColor) +
+                        (Specularfactor * material.specularColor.rgb * lightColor);
+                    }
+                }
+                break;
+        }
+    }
+    return retColor;
+    //return clamp(retColor + 0.2f * material.ambientColor.rgb + material.emissiveColor.rgb, float3(0.f, 0.f, 0.f), float3(1.f, 1.f, 1.f));
 }

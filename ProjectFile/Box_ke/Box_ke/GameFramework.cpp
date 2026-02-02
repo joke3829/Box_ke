@@ -40,6 +40,8 @@ bool CGameFrameworkDX11::Initialize(HWND hWnd, UINT clientWidth, UINT clientHeig
 	m_hWnd = hWnd;
 	m_clientWidth = clientWidth; m_clientHeight = clientHeight;
 
+	m_LimitedFrame = 120.f;
+
 	if (!InitDevice()) return false;
 	if (!InitSwapChain()) return false;
 	if (!InitRTVDSV()) return false;
@@ -145,6 +147,7 @@ bool CGameFrameworkDX11::InitRTVDSV()
 void CGameFrameworkDX11::Render()
 {
 	float ElapsedTime = m_Timer->Tick(m_LimitedFrame);
+	int tt = m_Timer->getFPS();
 
 	float clearColor[] = { 0.0, 0.0, 0.0, 1.0 };
 	m_DeviceContext->ClearRenderTargetView(m_RerderTargetView.Get(), clearColor);
@@ -159,6 +162,9 @@ void CGameFrameworkDX11::Render()
 	m_Scene->PostRender(m_DeviceContext.Get());
 
 	m_SwapChain->Present(0, 0);
+
+	std::wstring frame{ std::to_wstring(tt) + L"FPS"};
+	SetWindowText(m_hWnd, frame.c_str());
 }
 
 // =======================================================================

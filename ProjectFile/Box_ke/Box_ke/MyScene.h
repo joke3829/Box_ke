@@ -1,6 +1,8 @@
 #pragma once
 #include "Scene.h"
 #include "MyObject.h"
+#include "BloomProcessor.h"
+#include "LightManager.h"
 
 // Example
 class CTestSceneDX11 : public CScene {
@@ -72,6 +74,7 @@ public:
 
 	void PreRender(void* command = nullptr);
 	void Render(void* command = nullptr);
+	void PostRender(void* command = nullptr);
 protected:
 	void ResizeTargets();
 	void CreateTargets();
@@ -94,11 +97,24 @@ protected:
 
 	std::shared_ptr<CShader>						m_MRTShader{};
 	std::shared_ptr<CShader>						m_RenderShader{};
+	std::shared_ptr<CShader>						m_TextureRenderShader{};
+	std::shared_ptr<CShader>						m_ToneMappingShader{};
 
 	std::shared_ptr<CCamera>						m_Camera{};
 	std::vector<std::shared_ptr<CGameObject>>		m_Objects{};
 
+	ComPtr<ID3D11Texture2D>							m_OutputTexture{};
+	ComPtr<ID3D11ShaderResourceView>				m_OutputSRV{};
+	ComPtr<ID3D11RenderTargetView>					m_OutputRTV{};
+	// Bloom
+	std::shared_ptr<CBloomProcessor>				m_BloomProcessor{};
+
 	D3D11_VIEWPORT									m_Viewport{};
 	POINT							oldCursor{};
 	bool							click{};
+
+	bool							m_OnBloom{ true };
+
+	// Light
+	std::shared_ptr<CLightManager>					m_LightManager{};
 };

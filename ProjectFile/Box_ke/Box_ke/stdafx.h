@@ -1,4 +1,4 @@
-﻿// header.h: 표준 시스템 포함 파일
+// header.h: 표준 시스템 포함 파일
 // 또는 프로젝트 특정 포함 파일이 들어 있는 포함 파일입니다.
 //
 
@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 #include <list>
+#include <string>
 
 #include <d3d11_4.h>
 #include <d3d12.h>
@@ -42,6 +43,9 @@ using Microsoft::WRL::ComPtr;
 // multiple이 2의 제곱수일 때 정상 작동
 int Align(int size, int multiple);
 
+
+// 조명 타입
+enum LightType { LT_DIRECTIONAL, LT_SPOT, LT_POINT };
 
 // DX11용 열거자
 enum ShaderType { ST_NONE, ST_VS, ST_HS, ST_DS, ST_GS, ST_PS, ST_CS };

@@ -1,4 +1,4 @@
-﻿// ==================================================
+// ==================================================
 // Shaders.h
 // Base가 될 셰이더를 정리해둔 .h
 // ==================================================
@@ -51,6 +51,15 @@ protected:
 	ComPtr<ID3D11GeometryShader>			m_GS{};
 	ComPtr<ID3D11PixelShader>				m_PS{};
 	// Compute는 따로 사용하겠다.
+};
+
+class CComputeShaderDX11 : public CShader {
+public:
+	void SetShader(void* command);
+	virtual void ShaderReCompile(void* device);
+protected:
+	virtual void CreateCS(ID3D11Device* device) {}
+	ComPtr<ID3D11ComputeShader>				m_CS{};
 };
 
 // DX12 =======================================================================================
