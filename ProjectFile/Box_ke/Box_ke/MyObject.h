@@ -66,8 +66,6 @@ public:
 public:
 	void Initialize();
 
-	XMVECTOR ComputeAimQuaternion();
-	void ApplyQuaternionToOrientation(XMVECTOR q);
 protected:
 
 	shared_ptr<CGameObject> m_Hero;

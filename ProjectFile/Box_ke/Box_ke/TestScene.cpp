@@ -89,16 +89,7 @@ void CHeroScene::Setup(void* device, void* command)
 		c_MainBody.push_back(Gun);
 
 
-		// 레이저 
-		std::shared_ptr<CHierarchyGameObjectDX11> Laser = std::make_shared<CBoxObjectDX11>(device);
-
-		auto* p_GunBody = static_cast<CBodyObjectDX11*>(Gun.get());
-		auto& c_GunBody = p_GunBody->GetChilds();
-		Laser->SetMesh(LaserMesh);
-		Laser->GetMaterials().push_back(GunMaterial);
-		Laser->SetPosition(0.f, 50.f, 0.f);
-
-		c_GunBody.push_back(Laser);
+	
 
 
 
@@ -164,6 +155,12 @@ void CHeroScene::KeyboardMessageProcessing(HWND hWnd, UINT message, WPARAM wPara
 			m_Shader->ShaderReCompile(tempdev);
 			break;
 		
+		case '2':
+			if (m_Hero) {
+				auto AnimName = static_cast<CHeroObjectDX11*>(m_Hero.get())->GetAnimPlayer()->GetAnimationName();
+				static_cast<CHeroObjectDX11*>(m_Hero.get())->GetAnimPlayer()->Play("RollRight", false);
+			}
+			break;
 
 
 		}
@@ -195,7 +192,7 @@ void CHeroScene::MouseMessageProcessing(HWND hWnd, UINT message, WPARAM wParam, 
 		}
 		break;
 	case WM_MOUSEMOVE:
-	/*	if (click) {
+		if (click) {
 			POINT curPos{};
 			GetCursorPos(&curPos);
 
@@ -205,7 +202,7 @@ void CHeroScene::MouseMessageProcessing(HWND hWnd, UINT message, WPARAM wParam, 
 			m_Camera->Rotate(deltaX, deltaY);
 
 			SetCursorPos(oldCursor.x, oldCursor.y);
-		}*/
+		}
 		break;
 	}
 }
