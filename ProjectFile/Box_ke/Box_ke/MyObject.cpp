@@ -201,12 +201,8 @@ void CGunObjectDX11::UpdateObject(float elapsedTime)
 
 
 }
-void CGunObjectDX11::AimAtMouse()
-{
 
 
-
-}
 
 
 

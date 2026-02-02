@@ -75,18 +75,18 @@ void CHeroScene::Setup(void* device, void* command)
 		c_Hero.push_back(MainBody);
 
 		// 총
-		std::shared_ptr<CHierarchyGameObjectDX11> Gun = std::make_shared<CGunObjectDX11>(device);
+		m_Gun = std::make_shared<CGunObjectDX11>(device);
 
 		auto* p_MainBody = static_cast<CBodyObjectDX11*>(MainBody.get());
 		auto& c_MainBody = p_MainBody->GetChilds();
-		Gun->SetMesh(GunMesh);
-		Gun->GetMaterials().push_back(GunMaterial);
-		Gun->SetPosition(0.f, 0.f, 3.f);
+		m_Gun->SetMesh(GunMesh);
+		m_Gun->GetMaterials().push_back(GunMaterial);
+		m_Gun->SetPosition(0.f, 0.f, 3.f);
 		
-		static_cast<CGunObjectDX11*>(Gun.get())->Initialize();
-		static_cast<CGunObjectDX11*>(Gun.get())->SetHero(m_Hero);
+		static_cast<CGunObjectDX11*>(m_Gun.get())->Initialize();
+		static_cast<CGunObjectDX11*>(m_Gun.get())->SetHero(m_Hero);
 
-		c_MainBody.push_back(Gun);
+		c_MainBody.push_back(m_Gun);
 
 
 	
@@ -99,6 +99,9 @@ void CHeroScene::Setup(void* device, void* command)
 		m_Objects.back()->RotateAbsAxis(90.0f);
 		m_Objects.back()->SetPosition(0.f, -10.f, 0.f);
 	}
+
+	m_DebugLaser = std::make_unique<CDebugLineDX11>();
+	m_DebugLaser->Initialize(device);
 
 	
 }
@@ -179,8 +182,10 @@ void CHeroScene::MouseMessageProcessing(HWND hWnd, UINT message, WPARAM wParam, 
 				auto AnimName = static_cast<CHeroObjectDX11*>(m_Hero.get())->GetAnimPlayer()->GetAnimationName();
 				static_cast<CHeroObjectDX11*>(m_Hero.get())->GetAnimPlayer()->Play("RollTurn_On", false);
 				}
-
+			PickingMouse(hWnd);
 		}
+
+		
 		break;
 	case WM_LBUTTONUP:
 		if (click) {
@@ -202,6 +207,8 @@ void CHeroScene::MouseMessageProcessing(HWND hWnd, UINT message, WPARAM wParam, 
 			m_Camera->Rotate(deltaX, deltaY);
 
 			SetCursorPos(oldCursor.x, oldCursor.y);
+			
+
 		}
 		break;
 	}
@@ -211,7 +218,10 @@ void CHeroScene::UpdateObject(float elapsedTime, void* command)
 {
 	for (std::shared_ptr<CGameObject>& object : m_Objects)
 		object->UpdateObject(elapsedTime);
+
 }
+
+
 
 void CHeroScene::Render(void* command)
 {
@@ -223,7 +233,95 @@ void CHeroScene::Render(void* command)
 	m_Camera->UpdateCameraBuffer(command);
 	m_Camera->SetShaderVariable(command, ST_VS);
 	m_Camera->SetShaderVariable(command, ST_PS);
-
+	
 	for (std::shared_ptr<CGameObject>& object : m_Objects)
 		object->Render(command);
+
+	if (m_bDrawLaser)
+	{
+
+		m_DebugLaser->Render(command);
+	}
+}
+
+void CHeroScene::PickingMouse(HWND hWnd)
+{
+	if (m_Gun) {
+		// 1) 마우스 -> NDC
+		POINT curPos{};
+		GetCursorPos(&curPos);
+		ScreenToClient(hWnd, &curPos);
+
+		RECT rc{};
+		GetClientRect(hWnd, &rc);
+		float w = float(rc.right - rc.left);
+		float h = float(rc.bottom - rc.top);
+
+		float xNdc = (2.0f * curPos.x / w) - 1.0f;
+		float yNdc = 1.0f - (2.0f * curPos.y / h);
+
+
+		XMFLOAT3 vecEye = m_Camera->GetEYE();
+		XMFLOAT3 vecLook = m_Camera->GetLookVec();
+		XMFLOAT3 vecUp = m_Camera->GetUpVec();
+
+		XMVECTOR Eye = XMLoadFloat3(&vecEye);
+		XMVECTOR Look = XMVector3Normalize(XMLoadFloat3(&vecLook));
+		XMVECTOR Up = XMVector3Normalize(XMLoadFloat3(&vecUp));
+
+		XMMATRIX ViewMatrix = XMMatrixLookToLH(Eye, Look, Up);
+		XMMATRIX ProjMatrix = m_Camera->GetProjMatrix();
+
+		XMFLOAT3X3 proj3{};
+		XMStoreFloat3x3(&proj3, ProjMatrix);
+
+		float vx = xNdc / proj3._11;
+		float vy = yNdc / proj3._22;
+
+		XMMATRIX invView = XMMatrixInverse(nullptr, ViewMatrix);
+
+
+		XMVECTOR dirView = XMVectorSet(vx, vy, 1.0f, 0.0f);
+		dirView = XMVector3Normalize(dirView);
+
+		XMVECTOR dirWorld = XMVector3Normalize(XMVector3TransformNormal(dirView, invView));
+
+
+		XMVECTOR rayOriginCam = Eye;
+
+		float oz = XMVectorGetZ(rayOriginCam);
+		float dz = XMVectorGetZ(dirWorld);
+
+	
+
+		float t = (0.0f - oz) / dz;
+		if (t < 0.0f)
+			return; 
+
+		XMVECTOR hitPoint = rayOriginCam + dirWorld * t;
+
+		
+		XMFLOAT4X4 gunWorld = m_Gun->GetWorldMatrix();
+		XMVECTOR gunOrigin = XMVectorSet(gunWorld._41, gunWorld._42, gunWorld._43, 1.0f);
+		/*XMFLOAT3 gunWorld = static_cast<CGunObjectDX11*>(m_Gun.get())->GetGunAnimPlayer()->GetCurrentPose().Position;
+		XMVECTOR gunOrigin = XMVectorSet(gunWorld.x, gunWorld.y, gunWorld.z, 1.0f);*/
+
+		XMVECTOR gunDir = XMVector3Normalize(hitPoint - gunOrigin);
+
+		float length = 100.0f;
+		XMVECTOR laserEnd = gunOrigin + gunDir * length;
+
+		XMStoreFloat3(&m_LaserStart, gunOrigin);
+		XMStoreFloat3(&m_LaserEnd, laserEnd);
+		XMStoreFloat3(&m_AimPoint, hitPoint);
+
+		m_DebugLaser->SetPoints(m_LaserStart, m_LaserEnd);
+		m_bDrawLaser = true;
+
+
+
+	}
+
+
+
 }

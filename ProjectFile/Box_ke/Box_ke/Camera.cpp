@@ -70,6 +70,17 @@ XMFLOAT3 CCamera::GetRightVec() const
 	return m_RightVec;
 }
 
+XMFLOAT3 CCamera::GetUpVec() const
+{
+	return m_UpVec;
+}
+
+XMMATRIX CCamera::GetProjMatrix() const
+{
+	return m_ProjectionMatrix;
+}
+
+
 void CCamera::MakeRightVec()
 {
 	XMStoreFloat3(&m_RightVec, XMVector3Cross(XMLoadFloat3(&m_UpVec), XMLoadFloat3(&m_LookVec)));

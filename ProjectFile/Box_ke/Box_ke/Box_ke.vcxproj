@@ -132,6 +132,7 @@
     <ClInclude Include="Animation.h" />
     <ClInclude Include="Box_ke.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CDebugLineDX11.h" />
     <ClInclude Include="GameFramework.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LightManager.h" />
@@ -155,6 +156,7 @@
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="Box_ke.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CDebugLineDX11.cpp" />
     <ClCompile Include="GameFramework.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="LightManager.cpp" />

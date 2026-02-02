@@ -1,4 +1,4 @@
-﻿
+
 #pragma once
 #include "stdafx.h"
 class CGameObject;
@@ -34,6 +34,9 @@ public:
 	XMFLOAT3 GetEYE() const;
 	XMFLOAT3 GetLookVec() const;
 	XMFLOAT3 GetRightVec() const;
+	XMFLOAT3 GetUpVec() const;
+
+	XMMATRIX GetProjMatrix() const;
 
 	void MakeRightVec();
 

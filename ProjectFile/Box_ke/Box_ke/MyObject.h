@@ -56,13 +56,13 @@ public:
 	CGunObjectDX11(void* device);
 	void UpdateObject(float elapsedTime);
 
-	void AimAtMouse();
 
 
 
 public:
 	void SetHero(shared_ptr<CGameObject> hero) { m_Hero = hero; }
-
+	
+	shared_ptr<CAnimPlayer> GetGunAnimPlayer() const { return m_GunAnimplayer; }
 public:
 	void Initialize();
 
@@ -73,10 +73,7 @@ protected:
 
 	enum GUN_STATE { GUN_IDLE, GUN_ANIMATING };
 	GUN_STATE m_State = GUN_IDLE;
-	XMFLOAT4 m_LastMouseQuat;
 
-	float prevMousePos_x;
-	float prevMousePos_y;
 
 
 	
