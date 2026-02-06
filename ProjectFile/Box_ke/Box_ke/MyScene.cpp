@@ -368,7 +368,7 @@ void CDeferredRenderSceneDX11::BuildObjects()
 	m_TextureRenderShader = std::make_shared<CFullScreenTextrueRenderShaderDX11>(m_Device.Get());
 	m_ToneMappingShader = std::make_shared<CTextureToneMappingShaderDX11>(m_Device.Get());
 
-	m_Camera = std::make_unique<CCameraDX11>(m_Device.Get(), 60.f, 16.f / 9.f, 0.01f, 500.f);
+	m_Camera = std::make_unique<CCameraDX11>(m_Device.Get(), 60.f, 16.f / 9.f, 0.01f, 250.f);
 	m_Camera->SetStartSlot(1);
 	m_Camera->SetCameraEYE(0.f, 0.f, -30.f);
 
@@ -397,7 +397,7 @@ void CDeferredRenderSceneDX11::BuildObjects()
 		.diffuseColor = {1.0f, 0.0f, 0.0f, 1.f},
 		.specularColor = {1.f, 1.f, 1.f, 1.f},
 		.ambientColor = {1.f, 0.0f, 0.0f, 1.f},
-		.emissiveColor = {1.f, 0.f, 0.f, 0.f},
+		.emissiveColor = {0.f, 0.f, 0.f, 0.f},
 		.shininess = 128.f
 	};
 	std::shared_ptr<CMaterial> material3 = std::make_shared<CPhongShadingMaterialDX11>(m_Device.Get(), material);
@@ -405,7 +405,7 @@ void CDeferredRenderSceneDX11::BuildObjects()
 		.diffuseColor = {0.0f, 1.0f, 0.0f, 1.f},
 		.specularColor = {1.f, 1.f, 1.f, 1.f},
 		.ambientColor = {0.f, 1.0f, 0.0f, 1.f},
-		.emissiveColor = {0.f, 1.f, 0.f, 0.f},
+		.emissiveColor = {0.f, 0.f, 0.f, 0.f},
 		.shininess = 128.f
 	};
 	std::shared_ptr<CMaterial> material4 = std::make_shared<CPhongShadingMaterialDX11>(m_Device.Get(), material);
@@ -466,7 +466,7 @@ void CDeferredRenderSceneDX11::BuildObjects()
 		m_Objects.back()->RotateAbsAxis(90.0f);
 		m_Objects.back()->SetPosition(0.f, -40.f, 0.f);
 	}
-	//m_LightManager->AddDirectionalLight(XMFLOAT4(0.2, 0.7, 0.8, 1.0), XMFLOAT3(-1.f, -1.f, 2.f), 10.f);
+	//m_LightManager->AddDirectionalLight(XMFLOAT4(0.2, 0.7, 0.8, 1.0), XMFLOAT3(-0.3f, -1.f, -0.3f), XMFLOAT3(0.f, 1.f, 0.f), 10.f);
 
 	m_BloomProcessor = std::make_shared<CBloomProcessorDX11>(m_ClientWidth, m_ClientHeight, m_Device.Get(), m_TextureRenderShader);
 }
@@ -516,6 +516,9 @@ void CDeferredRenderSceneDX11::KeyboardMessageProcessing(HWND hWnd, UINT message
 		case 'B':
 			m_OnBloom = !m_OnBloom;
 			break;
+		case 'M':
+			animationonoff = !animationonoff;
+			break;
 		}
 		break;
 	}
@@ -553,8 +556,10 @@ void CDeferredRenderSceneDX11::MouseMessageProcessing(HWND hWnd, UINT message, W
 
 void CDeferredRenderSceneDX11::UpdateObject(float elapsedTime, void* command)
 {
-	for (std::shared_ptr<CGameObject>& object : m_Objects)
-		object->UpdateObject(elapsedTime);
+	if (animationonoff) {
+		for (std::shared_ptr<CGameObject>& object : m_Objects)
+			object->UpdateObject(elapsedTime);
+	}
 	// Light Matrix Update
 	//m_LightManager->UpdateLights(elapsedTime);
 	m_LightManager->UpdateLights(elapsedTime, command, m_Objects, m_Camera.get());

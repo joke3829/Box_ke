@@ -15,8 +15,6 @@ CLight::CLight(LightCB& cb, XMFLOAT4 lightColor, XMFLOAT3 direction, XMFLOAT3 up
 
 	m_InitialDir = direction;
 	m_InitialUp = nUp;
-	// temp
-	XMStoreFloat4x4(&m_ProjMatrix, XMMatrixOrthographicLH(DEFAULT_SHADOWMAP_SIZE, DEFAULT_SHADOWMAP_SIZE, 0.001f, 500.f));
 
 	XMStoreFloat4x4(&m_LocalMatrix, XMMatrixIdentity());
 	XMStoreFloat4x4(&m_WorldMatrix, XMMatrixIdentity());
@@ -92,8 +90,46 @@ void CLight::UpdateLightInfo(CCamera* camera)
 		break;
 	}
 	case LT_DIRECTIONAL: {
-		// 카메라를 이용해 view frustum을 덮는 viewproj 행렬을 만들어 저장하라
+		XMVECTOR tpoints[] = {
+			{-1.f, 1.f, 0.f, 1.f},
+			{1.f, 1.f, 0.f, 1.f},
+			{1.f, -1.f, 0.f, 1.f},
+			{-1.f, -1.f, 0.f, 1.f},
+			{-1.f, 1.f, 1.f, 1.f},
+			{1.f, 1.f, 1.f, 1.f},
+			{1.f, -1.f, 1.f, 1.f},
+			{-1.f, -1.f, 1.f, 1.f},
+			{0.f, 0.f, 0.5f, 1.f}
+		};
+		XMVECTOR frustumCenter{};
+		XMMATRIX invmat = camera->GetInvViewProjMaxtrix();
 
+		frustumCenter = XMVector3TransformCoord(tpoints[8], invmat);
+		frustumCenter = XMVectorSet(0.f, 0.f, 0.f, 1.f);
+		XMStoreFloat3(&m_LightInfo.direction, XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_InitialDir), XMLoadFloat4x4(&m_WorldMatrix))));
+		XMVECTOR dir = XMVector3Normalize(XMLoadFloat3(&m_LightInfo.direction));
+		XMVECTOR eye = frustumCenter - (1000 * dir);
+		XMVECTOR up = XMVector3Normalize(XMVector3TransformNormal(XMLoadFloat3(&m_InitialUp), XMLoadFloat4x4(&m_WorldMatrix)));
+
+		XMMATRIX view = XMMatrixLookToLH(eye, dir, up);
+		invmat = invmat * view;
+
+		XMVECTOR maxVec = { FLT_MIN, FLT_MIN, FLT_MIN, 1.f };
+		XMVECTOR minVec = { FLT_MAX, FLT_MAX, FLT_MAX, 1.f };
+
+		for (int i = 0; i < 8; ++i) {
+			XMVECTOR tvec = XMVector3TransformCoord(tpoints[i], invmat);
+			minVec = XMVectorMin(minVec, tvec);
+			maxVec = XMVectorMax(maxVec, tvec);
+		}
+
+		XMFLOAT3 minf, maxf;
+		XMStoreFloat3(&minf, minVec);
+		XMStoreFloat3(&maxf, maxVec);
+
+		XMMATRIX dproj = XMMatrixOrthographicOffCenterLH(minf.x, maxf.x, minf.y, maxf.y, minf.z - 100.f, maxf.z + 100.f);
+		//XMMATRIX dproj = XMMatrixOrthographicOffCenterLH(-300, 300, -300, 300, 0.1, 600);
+		XMStoreFloat4x4(&m_LightInfo.ShadowMapMatrix, XMMatrixTranspose(view * dproj));
 		break;
 	}
 	default: {
@@ -306,6 +342,7 @@ void CLightDX11::UpdateShadowMap(void* command, std::vector<std::shared_ptr<CGam
 		}
 		break;
 	}
+	case LT_DIRECTIONAL:
 	case LT_SPOT: {
 		context->OMSetRenderTargets(1, m_ShadowMapRTVs[0].GetAddressOf(), m_DepthStencilView.Get());
 		context->ClearRenderTargetView(m_ShadowMapRTVs[0].Get(), clearColor);
@@ -326,10 +363,6 @@ void CLightDX11::UpdateShadowMap(void* command, std::vector<std::shared_ptr<CGam
 		for (auto& p : objects) {
 			p->Render(context);
 		}
-		break;
-	}
-	case LT_DIRECTIONAL: {
-
 		break;
 	}
 	}

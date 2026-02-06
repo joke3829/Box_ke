@@ -117,4 +117,6 @@ protected:
 
 	// Light
 	std::shared_ptr<CLightManager>					m_LightManager{};
+
+	bool animationonoff{};
 };

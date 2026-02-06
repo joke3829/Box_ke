@@ -1,5 +1,5 @@
 #include "Lighting.hlsl"
-#define MAX_LIGHTS 100
+#define MAX_LIGHTS 50
 //#define DEBUG_TEST
 
 cbuffer ObjectCBuffer : register(b0)

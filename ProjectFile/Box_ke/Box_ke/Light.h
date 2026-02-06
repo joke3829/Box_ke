@@ -16,7 +16,7 @@ struct alignas(16) LightCB {
 	XMFLOAT4X4 ShadowMapMatrix{};		// DirectionalLight만 이용할 예정
 };
 
-constexpr UINT DEFAULT_SHADOWMAP_SIZE = 1024;
+constexpr UINT DEFAULT_SHADOWMAP_SIZE = 2048;
 
 class CLight {
 public: // up을 넣을 때 dir과 완전 반대방향으로 넣지 않도록 한다.

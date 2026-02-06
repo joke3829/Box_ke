@@ -3,7 +3,7 @@
 #include "Light.h"
 #include "MyShader.h"
 
-constexpr UINT MAX_LIGHTS = 100;
+constexpr UINT MAX_LIGHTS = 50;
 
 struct ShaderLightCB {
 	LightCB lights[MAX_LIGHTS]{};
